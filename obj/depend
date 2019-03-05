@@ -1,0 +1,9 @@
+obj/grid.o: grid.cpp grid.h array2.h util.h
+obj/particles.o: particles.cpp particles.h grid.h array2.h util.h vec2.h
+obj/main.o: main.cpp particles.h grid.h array2.h util.h vec2.h \
+  shared_main.h
+obj/grid.o: grid.cpp grid.h array2.h util.h
+obj/particles.o: particles.cpp particles.h grid.h array2.h util.h vec2.h
+obj/mainwithviewer.o: mainwithviewer.cpp particles.h grid.h array2.h \
+  util.h vec2.h viewflip2d/gluvi.h shared_main.h
+obj/gluvi.o: viewflip2d/gluvi.cpp viewflip2d/gluvi.h

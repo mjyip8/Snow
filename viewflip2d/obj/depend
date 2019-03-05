@@ -1,0 +1,2 @@
+obj/main.o: main.cpp gluvi.h vec2.h util.h
+obj/gluvi.o: gluvi.cpp gluvi.h
