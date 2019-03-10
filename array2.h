@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <cmath>
 #include <cstring>
+#include "vec2.h"
 
 template<class T>
 struct Array2{
@@ -95,6 +96,7 @@ struct Array2{
 };
 
 typedef Array2<float> Array2f;
+typedef Array2<Vec2f> Array2v;
 typedef Array2<double> Array2d;
 typedef Array2<char> Array2c;
 

@@ -9,11 +9,16 @@
 #define GRID_H
 
 #include "array2.h"
+#include "vec2.h"
 #include "util.h"
+#include <map>
+#include <Eigen/Dense>
 
 #define AIRCELL 0
 #define FLUIDCELL 1
 #define SOLIDCELL 2
+
+using namespace std;
 
 struct Grid{
    float gravity;
@@ -32,11 +37,16 @@ struct Grid{
    Array2d m;
    Array2d r, z, s;
 
+   map< Eigen::Vector2d , vector<Eigen::Vector2d> > node_gw;
+
    Grid(void)
    {}
 
    Grid(float gravity_, int cell_nx, int cell_ny, float lx_)
-   { init(gravity_, cell_nx, cell_ny, lx_); }
+   { 
+      init(gravity_, cell_nx, cell_ny, lx_); 
+      node_gw.clear();
+   }
 
    void init(float gravity_, int cell_nx, int cell_ny, float lx_);
    float CFL(void);
@@ -92,6 +102,10 @@ struct Grid{
       bary_y(py, j, fy);
       pv=v.bilerp(i, j, fx, fy);
    }
+
+   
+   float bspline_weight(float x);
+   float bspline_gradweight(float x);
 
    private:
    void init_phi(void);

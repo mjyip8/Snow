@@ -10,8 +10,10 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
+#include <Eigen/Dense>
 #include <iostream>
 #include "particles.h"
+#include "particle.h"
 #include "util.h"
 
 using namespace std;
@@ -28,10 +30,11 @@ template<class T>
 void Particles::
 accumulate(T &accum, float q, int i, int j, float fx, float fy, Array2f &sum)
 {
+
    float weight;
 
    weight=(1-fx)*(1-fy);
-   accum(i,j)+=weight*q;
+   accum(i,j)+=weight*q; //normalized weights
    sum(i,j)+=weight;
 
    weight=fx*(1-fy);
@@ -47,8 +50,25 @@ accumulate(T &accum, float q, int i, int j, float fx, float fy, Array2f &sum)
    sum(i+1,j+1)+=weight;
 }
 
+void Particles::calc_mass_weight(Particle p) {
+   float weight;
+   mass_weight.zero();
+   grid.node_gw.clear();
+   for (int i = max(p.i - 1, 0); i <= min(p.i + 1, grid.v.ny); i++) {
+      for (int j = max(p.j - 1, 0); j <= min(p.j + 1, grid.v.ny); j++) {
+         float wx = grid.bspline_weight((p.x[0] - i * grid.h)/ grid.h);
+         float wy = grid.bspline_weight((p.x[1] - j * grid.h) / grid.h);
+         mass_weight(i, j) +=(wx * wy);
+         Eigen::Vector2d grad_weight = Eigen::Vector2d(wx * grid.bspline_gradweight((p.x[0] - i * grid.h) / grid.h),
+                                    wy * grid.bspline_gradweight((p.x[1] - j * grid.h) / grid.h));
+         p.weight_nodes.push_back(Eigen::Vector2i(i, j));
+         p.grad_weights.push_back(grad_weight);
+      }
+   }
+}
+
 float Particles::get_mass(float px, float py) {
-   int i, j;
+   /*int i, j;
    float fx, fy;
    grid.bary_x(px, i, fx);
    std::cout << "fx = " << fx << std::endl;
@@ -64,7 +84,13 @@ float Particles::get_mass(float px, float py) {
 
    Vec2f mass = Vec2f(mu, mv);
    std::cout << mag(mass) << endl;
-   return mag(mass);
+   return mag(mass);*/
+
+   int i, j;
+   float fx, fy;
+   grid.bary_x(px, i, fx);
+   grid.bary_y(py, j, fy);
+   return mass_weight.bilerp(i, j, fx, fy);
 }
 
 void Particles::update_vol_dens(void) {
@@ -118,6 +144,7 @@ transfer_to_grid(void)
       grid.marker(i,j)=FLUIDCELL;
       P[p].i = i;
       P[p].j = j;
+      calc_mass_weight(P[p]);
    }
 }
 
@@ -132,7 +159,6 @@ computeC(Array2f &ufield, int i, int j, float fx, float fy)
 void Particles::
 update_from_grid(void)
 {
-   int p;
    int i, ui, j, vj;
    float fx, ufx, fy, vfy;
    for(int p=0; p<np; ++p) {

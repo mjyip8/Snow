@@ -12,6 +12,7 @@
 #include "grid.h"
 #include "vec2.h"
 #include "particle.h"
+#include "array2.h"
 
 typedef enum SimulationTypeEnum { PIC = 0, FLIP = 1, APIC = 2 } SimulationType;
 
@@ -24,10 +25,11 @@ struct Particles{
    // transfer stuff
    Array2f sum_u;
    Array2f sum_v;
+   Array2f mass_weight;
    SimulationType simType;
 
    Particles(Grid &grid_, SimulationType simType_)
-      :grid(grid_), np(0),
+      :grid(grid_), np(0), mass_weight(grid_.pressure.nx+1, grid_.pressure.ny+1),
        sum_u(grid_.pressure.nx+1, grid_.pressure.ny+1), sum_v(grid_.pressure.nx+1, grid_.pressure.ny+1), simType( simType_ )
    {}
 
@@ -39,6 +41,7 @@ struct Particles{
    void update_vol_dens(void);
 
    private:
+   void calc_mass_weight(Particle p);
    float get_mass(float px, float py);
    template<class T> void accumulate(T &accum, float q, int i, int j, float fx, float fy, Array2f &sum);
    Vec2f computeC(Array2f &ufield, int i, int j, float fx, float fy);

@@ -142,6 +142,7 @@ apply_boundary_conditions(void)
 }
 
 void Grid::make_elastoplastic(void) {
+   
 }
 
 void Grid::
@@ -402,6 +403,26 @@ add_gradient(void)
       if(marker(i,j-1)|marker(i,j)==FLUIDCELL){ // if at least one is FLUID, neither is SOLID
          v(i,j)+=pressure(i,j)-pressure(i,j-1);
       }
+   }
+}
+
+float Grid::bspline_weight(float x) {
+   if (x >= 0. && x < 1.) {
+      return 0.5 * x * x * x - x * x + (2./3.);
+   } else if (x >= 1. && x < 2) {
+      return -(1./6.)*x*x*x + x*x - 2*x + (4./3.);
+   } else {
+      return 0;
+   }
+}
+
+float Grid::bspline_gradweight(float x) {
+   if (x >= 0. && x < 1.) {
+      return 1.5*x*x - 2*x;
+   } else if (x >= 1. && x < 2) {
+      return -.5*x*x + 2*x - 2;
+   } else {
+      return 0;
    }
 }
 
