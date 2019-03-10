@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include "grid.h"
+#include "particles.h"
 
 using namespace std;
 
@@ -138,6 +139,9 @@ apply_boundary_conditions(void)
       u(0,j)=u(1,j)=u(u.nx-1,j)=u(u.nx-2,j)=0;
    for(i=0; i<v.nx; ++i)
       v(i,0)=v(i,1)=v(i,v.ny-1)=v(i,v.ny-2)=0;
+}
+
+void Grid::make_elastoplastic(void) {
 }
 
 void Grid::

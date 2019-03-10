@@ -20,6 +20,8 @@
 #define GRAV_CENTER_Y (0.5)
 #define GRAV_FACTOR (0.01)
 
+#include <iostream>
+
 using namespace std;
 /* This sets the signed distance function phi of the fluid. You can selectively uncomment a line to decide */
 /* which example to run. This is used in initializing the water. */
@@ -81,12 +83,17 @@ void init_water_drop(Grid &grid, Particles &particles, int na, int nb)
    }
 }
 
-void advance_one_step(Grid &grid, Particles &particles, double dt)
+void advance_one_step(Grid &grid, Particles &particles, double dt, int framenum)
 {
 
    for(int i=0; i<5; ++i)
       particles.move_particles_in_grid(0.2*dt);
    particles.transfer_to_grid();
+   std::cout << framenum << std::endl;
+   if (framenum == 1) {
+      printf("Hello?");
+      particles.update_vol_dens();
+   }
    grid.save_velocities();
    grid.add_gravity(dt, USE_SPHERICAL_GRAV, GRAV_CENTER_X * grid.lx, GRAV_CENTER_Y  * grid.ly);
    grid.compute_distance_to_fluid();
@@ -98,7 +105,7 @@ void advance_one_step(Grid &grid, Particles &particles, double dt)
    particles.update_from_grid();
 }
 
-void advance_one_frame(Grid &grid, Particles &particles, double frametime)
+void advance_one_frame(Grid &grid, Particles &particles, double frametime, int framenum)
 {
    double t=0;
    double dt;
@@ -111,7 +118,7 @@ void advance_one_frame(Grid &grid, Particles &particles, double frametime)
       }else if(t+1.5*dt>=frametime)
          dt=0.5*(frametime-t);
       printf("advancing %g (to %f%% of frame)\n", dt, 100.0*(t+dt)/frametime);
-      advance_one_step(grid, particles, dt);
+      advance_one_step(grid, particles, dt, framenum);
       t+=dt;
    }
 }

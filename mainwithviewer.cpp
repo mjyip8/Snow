@@ -47,8 +47,8 @@ void display(void)
    glColor3f(1, 1, 1);
    glBegin(GL_POINTS);
    if( pParticles )
-      for(unsigned int i=0; i<pParticles->x.size(); ++i)
-         glVertex2fv(pParticles->x[i].v);
+      for(unsigned int i=0; i<pParticles->np; ++i)
+         glVertex2fv(pParticles->P[i].x.v);
    glEnd();
 }
 
@@ -65,8 +65,8 @@ void key_handler(unsigned char key, int x, int y)
       return;
    switch(key){
       case ' ':
-         advance_one_frame(*pGrid, *pParticles, 1./30);
          ++stepCount;
+         advance_one_frame(*pGrid, *pParticles, 1./30, stepCount);
          printf("===================================================> step %d...\n", stepCount);
          pParticles->write_to_file("%s/frameparticles%04d", outputpath.c_str(), stepCount);
          sprintf(frame_number, "frame %d", stepCount);

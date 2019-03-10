@@ -11,23 +11,24 @@
 #include <vector>
 #include "grid.h"
 #include "vec2.h"
+#include "particle.h"
 
 typedef enum SimulationTypeEnum { PIC = 0, FLIP = 1, APIC = 2 } SimulationType;
 
 struct Particles{
    Grid &grid;
    int np; // number of particles
-   std::vector<Vec2f> x, u; // positions and velocities
-   /* TODO: add helper variables */
-   //std::vector<Vec2f> cx, cy; // c vectors stored, times h
+
+   std::vector<Particle> P;
 
    // transfer stuff
-   Array2f sum;
+   Array2f sum_u;
+   Array2f sum_v;
    SimulationType simType;
 
    Particles(Grid &grid_, SimulationType simType_)
       :grid(grid_), np(0),
-       sum(grid_.pressure.nx+1, grid_.pressure.ny+1), simType( simType_ )
+       sum_u(grid_.pressure.nx+1, grid_.pressure.ny+1), sum_v(grid_.pressure.nx+1, grid_.pressure.ny+1), simType( simType_ )
    {}
 
    void add_particle(const Vec2f &px, const Vec2f &pu);
@@ -35,10 +36,11 @@ struct Particles{
    void update_from_grid(void);
    void move_particles_in_grid(float dt);
    void write_to_file(const char *filename_format, ...);
+   void update_vol_dens(void);
 
    private:
-   template<class T> void accumulate(T &accum, float q, int i, int j, float fx, float fy);
-   template<class T> void affineFix(T &accum, Vec2f c, int i, int j, float fx, float fy);
+   float get_mass(float px, float py);
+   template<class T> void accumulate(T &accum, float q, int i, int j, float fx, float fy, Array2f &sum);
    Vec2f computeC(Array2f &ufield, int i, int j, float fx, float fy);
 };
 

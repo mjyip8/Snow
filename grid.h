@@ -46,6 +46,7 @@ struct Grid{
    void extend_velocity(void);
    void apply_boundary_conditions(void);
    void make_incompressible(void);
+   void make_elastoplastic(void);
    void get_velocity_update(void);
 
    void bary_x(float x, int &i, float &fx)
