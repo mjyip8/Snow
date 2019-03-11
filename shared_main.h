@@ -20,7 +20,9 @@
 #define GRAV_CENTER_Y (0.5)
 #define GRAV_FACTOR (0.01)
 
+
 #include <iostream>
+#include <Eigen/Dense>
 
 using namespace std;
 /* This sets the signed distance function phi of the fluid. You can selectively uncomment a line to decide */
@@ -76,7 +78,7 @@ void init_water_drop(Grid &grid, Particles &particles, int na, int nb)
                   project(grid, x, y, phi, -0.75*grid.h/na);
                   phi=fluidphi(grid, x, y);
                }
-               particles.add_particle(Vec2f(x,y), Vec2f(vx,vy));
+               particles.add_particle(Eigen::Vector2d(x,y), Eigen::Vector2d(vx,vy));
             }
          }
       }
@@ -85,15 +87,19 @@ void init_water_drop(Grid &grid, Particles &particles, int na, int nb)
 
 void advance_one_step(Grid &grid, Particles &particles, double dt, int framenum)
 {
+   //STEP 1: Rasterize particle data to the grid
+   particles.transfer_mass_to_grid();
+   particles.transfer_v_to_grid();
 
-   for(int i=0; i<5; ++i)
-      particles.move_particles_in_grid(0.2*dt);
-   particles.transfer_to_grid();
-   std::cout << framenum << std::endl;
+   //STEP 2: Compute particle volumes and densities
    if (framenum == 1) {
-      printf("Hello?");
-      particles.update_vol_dens();
+      particles.compute_vol_dens();
    }
+
+   grid.compute_grid_forces();
+   grid.update_v();
+
+
    grid.save_velocities();
    grid.add_gravity(dt, USE_SPHERICAL_GRAV, GRAV_CENTER_X * grid.lx, GRAV_CENTER_Y  * grid.ly);
    grid.compute_distance_to_fluid();

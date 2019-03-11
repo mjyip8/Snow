@@ -34,15 +34,18 @@ struct Particles{
    {}
 
    void add_particle(const Vec2f &px, const Vec2f &pu);
-   void transfer_to_grid(void);
+   //void transfer_to_grid(void);
    void update_from_grid(void);
    void move_particles_in_grid(float dt);
    void write_to_file(const char *filename_format, ...);
-   void update_vol_dens(void);
+
+   
+   void compute_vol_dens(void);
+   void transfer_mass_to_grid(void);
+   void transfer_v_to_grid(void);
+
 
    private:
-   void calc_mass_weight(Particle p);
-   float get_mass(float px, float py);
    template<class T> void accumulate(T &accum, float q, int i, int j, float fx, float fy, Array2f &sum);
    Vec2f computeC(Array2f &ufield, int i, int j, float fx, float fy);
 };

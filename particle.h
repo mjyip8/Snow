@@ -1,19 +1,18 @@
 #include "array2.h"
-#include "vec2.h"
 #include <Eigen/Dense>
 
 #ifndef PARTICLE
 #define PARTICLE
+#define YOUNG_MOD (0.000014)
+#define POSS_R (0.2)
+#define CRIT_STRETCH (1 + 0.0075)
+#define CRIT_COMPRESS (1 - 0.025)
 
 struct Particle {
-	Vec2f x;
-	Vec2f u; // positions and velocities
-
-	Vec2f x_star; //deformed position
-   
-	Vec2f cx;
-	Vec2f cy;
-
+	Eigen::Vector2d x;
+	Eigen::Vector2d u; // positions and velocities
+	Eigen::Vector2d x_star; //deformed position
+ 
 	double d;
 	double V;
 	Eigen::Vector2d grad_w;
@@ -29,11 +28,16 @@ struct Particle {
 
 	std::vector<Eigen::Vector2i> weight_nodes;
 	std::vector<Eigen::Vector2d> grad_weights;
+	std::vector<double> weights;
+
+
+	double mu;
+	double lambda;
 
 	int i;
 	int j;
 
-	Particle(Vec2f X, Vec2f U): x(X), u(U), cx(Vec2f(0.f, 0.f)), cy(Vec2f(0.f, 0.f)),
+	Particle(Eigen::Vector2d X, Eigen::Vector2d U): x(X), u(U), 
 	d(0.), V(0.), i(0), j(0) {
 		weight_nodes.clear();
 		grad_weights.clear();
@@ -48,8 +52,15 @@ struct Particle {
 		svd_v = Eigen::Matrix2d::Identity();
 		svd_s = Eigen::Matrix2d::Identity();
 		svd_u = Eigen::Matrix2d::Identity();
+
+		lambda = (YOUNG_MOD * POSS_R)/((1 + POSS_R) * (1 - 2 * POSS_R));
+		mu = (YOUNG_MOD)/ (2 * (1 + POSS_R));
 	}
 
 	void updateDeformGradients(void);
+	Eigen::Matrix2d get_energy_deriv(void);
+
+	private:
+		void clamp_def_elas(void);
 };
 #endif

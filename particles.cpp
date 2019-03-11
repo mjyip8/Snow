@@ -26,134 +26,89 @@ add_particle(const Vec2f &px, const Vec2f &pu)
    ++np;
 }
 
-template<class T>
-void Particles::
-accumulate(T &accum, float q, int i, int j, float fx, float fy, Array2f &sum)
-{
-
+// STEP 1
+void Particles::transfer_mass_to_grid(void) {
+   float fx, fy;
    float weight;
+   grid.mass.zero();
+   grid.nodes_grad_weights_x.zero();
+   grid.nodes_grad_weights_y.zero();
 
-   weight=(1-fx)*(1-fy);
-   accum(i,j)+=weight*q; //normalized weights
-   sum(i,j)+=weight;
+   for (int n = 0; n < np; n++) {
+      P[n].i = (int) (P[n].x(0) / grid.h);
+      P[n].j = (int) (P[n].x(1) / grid.h);
 
-   weight=fx*(1-fy);
-   accum(i+1,j)+=weight*q;
-   sum(i+1,j)+=weight;
+      int low_i = max((int)((P[n].x(0) - 2) / grid.h), 0);
+      int low_j = max((int)((P[n].x(1) - 2) / grid.h), 0);
+      int high_i = min((int)((P[n].x(0) + 2) / grid.h), grid.mass.nx - 1);
+      int high_j = min((int)((P[n].x(1) + 2) / grid.h), grid.mass.ny - 1);
 
-   weight=(1-fx)*fy;
-   accum(i,j+1)+=weight*q;
-   sum(i,j+1)+=weight;
+      // iterate for all grid cells within distance 2
+      for (int i = low_i; i <= high_i; i++) {
+         for (int j = low_j; j <= high_j; j++) {
 
-   weight=fx*fy;
-   accum(i+1,j+1)+=weight*q;
-   sum(i+1,j+1)+=weight;
-}
+            float wx = grid.bspline_weight((P[n].x[0] - i * grid.h)/ grid.h);
+            float wy = grid.bspline_weight((P[n].x[1] - j * grid.h) / grid.h);
+            grid.mass(i, j) += (wx * wy);
+            P[n].weights.push_back(wx * wy);
 
-void Particles::calc_mass_weight(Particle p) {
-   float weight;
-   mass_weight.zero();
-   grid.node_gw.clear();
-   for (int i = max(p.i - 1, 0); i <= min(p.i + 1, grid.v.ny); i++) {
-      for (int j = max(p.j - 1, 0); j <= min(p.j + 1, grid.v.ny); j++) {
-         float wx = grid.bspline_weight((p.x[0] - i * grid.h)/ grid.h);
-         float wy = grid.bspline_weight((p.x[1] - j * grid.h) / grid.h);
-         mass_weight(i, j) +=(wx * wy);
-         Eigen::Vector2d grad_weight = Eigen::Vector2d(wx * grid.bspline_gradweight((p.x[0] - i * grid.h) / grid.h),
-                                    wy * grid.bspline_gradweight((p.x[1] - j * grid.h) / grid.h));
-         p.weight_nodes.push_back(Eigen::Vector2i(i, j));
-         p.grad_weights.push_back(grad_weight);
+            Eigen::Vector2d grad_weight = Eigen::Vector2d(wx * grid.bspline_gradweight((P[n].x[0] - i * grid.h) / grid.h),
+                                       wy * grid.bspline_gradweight((P[n].x[1] - j * grid.h) / grid.h));
+            P[n].grad_weights.push_back(grad_weight);
+            grid.grad_weights_x(i, j) += grad_weight(0);
+            grid.grad_weights_y(i, j) += grad_weight(1);
+            
+         }
       }
    }
 }
 
-float Particles::get_mass(float px, float py) {
-   /*int i, j;
-   float fx, fy;
-   grid.bary_x(px, i, fx);
-   std::cout << "fx = " << fx << std::endl;
-   grid.bary_y_centre(py, j, fy);
-   float mu = sum_u.bilerp(i, j, fx, fy);
-   std::cout << "mu = " << mu << std::endl;
+//STEP 1
+void Particles::transfer_v_to_grid(void) {
+   for (int n = 0; n < np; n++) {
+      for (int i = P[n].i ; i <= min(P[n].i + 1, grid.v_x.nx - 1); i++) {
+         for (int j = P[n].j; j <= min(P[n].j + 1, grid.v_x.ny - 1); j++) {
+            double dx = abs(P[n].x(0) - (i * grid.h)) / grid.h;
+            double dy = abs(P[n].y(0) - (j * grid.h)) / grid.h;
 
-   grid.bary_x_centre(px, i, fx);
-   grid.bary_y(py, j, fy);
-   std::cout << "fy = " << fy << std::endl;
-   float mv = sum_v.bilerp(i, j, fx, fy);
-   std::cout << "mv = " << mv << std::endl;
+            grid.v_x(i, j) += dx * dy * P[n].v(0);
+            grid.v_y(i, j) += dx * dy * P[n].v(1);
+         } 
+      }
+   }
 
-   Vec2f mass = Vec2f(mu, mv);
-   std::cout << mag(mass) << endl;
-   return mag(mass);*/
-
-   int i, j;
-   float fx, fy;
-   grid.bary_x(px, i, fx);
-   grid.bary_y(py, j, fy);
-   return mass_weight.bilerp(i, j, fx, fy);
-}
-
-void Particles::update_vol_dens(void) {
-   Vec2f midx, gu;
-   float xmin=1.001*grid.h, xmax=grid.lx-1.001*grid.h;
-   float ymin=1.001*grid.h, ymax=grid.ly-1.001*grid.h;
-   for(int p=0; p<np; ++p){
-      P[p].d = get_mass(P[p].x[0], P[p].x[1]) / (grid.h * grid.h);
-      P[p].V = (P[p].d == 0)? 0: 1.0/P[p].d;
+   for (int i = 0; i < grid.v_x.nx; i++) {
+      for (int j = 0; j < grid.v_y.ny; j++) {
+         grid.v_x(i, j) /= grid.mass(i, j);
+         grid.v_y(i, j) /= grid.mass(i, j);
+      }
    }
 }
 
+//STEP 2
+void Particles::compute_vol_dens(void) {
+   for (int n = 0; n < np; n++) {
+      int i = P[n].i;
+      int j = P[n].j;
 
-void Particles::
-transfer_to_grid(void)
-{
-   int p, i, ui, j, vj;
-   float fx, ufx, fy, vfy;
+      //computing density
+      int low_i = max((int)((P[n].x(0) - 2) / grid.h), 0);
+      int low_j = max((int)((P[n].x(1) - 2) / grid.h), 0);
+      int high_i = min((int)((P[n].x(0) + 2) / grid.h), grid.mass.nx - 1);
+      int high_j = min((int)((P[n].x(1) + 2) / grid.h), grid.mass.ny - 1);
 
-   grid.u.zero();
-   sum_u.zero();
+      P[n].d = 0.;
+      // iterate for all grid cells within distance 2
+      int index = 0;
+      for (int i = low_i; i <= high_i; i++) {
+         for (int j = low_j; j <= high_j; j++) {
+            P[n].d += (P[n].weights[index] / (grid.h * grid.h));
+            index++;
+         }
+      }
 
-   for(int p=0; p<np; ++p) {
-      grid.bary_x(P[p].x[0], ui, ufx);
-      grid.bary_y_centre(P[p].x[1], j, fy);
-      accumulate(grid.u, P[p].u[0], ui, j, ufx, fy, sum_u);
+      P[n].V = (P[n].d > 0.)? (1 / P[n].d) : 0.;
    }
-
-   for(j=0; j<grid.u.ny; ++j) for(i=0; i<grid.u.nx; ++i){
-      if(sum_u(i,j)!=0) grid.u(i,j)/=sum_u(i,j);
-   }
-
-   grid.v.zero();
-   sum_v.zero();
-
-   for(int p=0; p<np; ++p) {
-      grid.bary_y(P[p].x[1], vj, vfy);
-      grid.bary_x_centre(P[p].x[0], i, fx);
-      accumulate(grid.v, P[p].u[1], i, vj, fx, vfy, sum_v);
-   }
-
-   for(j=0; j<grid.v.ny; ++j) for(i=0; i<grid.v.nx; ++i){
-      if(sum_v(i,j)!=0) grid.v(i,j)/=sum_v(i,j);
-   }
-
-   // identify where particles are in grid
-   grid.marker.zero();
-   for(int p=0; p<np; ++p) {
-      grid.bary_x(P[p].x[0], i, fx);
-      grid.bary_y(P[p].x[1], j, fy);
-      grid.marker(i,j)=FLUIDCELL;
-      P[p].i = i;
-      P[p].j = j;
-      calc_mass_weight(P[p]);
-   }
-}
-
-/* this function computes c from the gradient of w and the velocity field from the grid. */
-Vec2f Particles::
-computeC(Array2f &ufield, int i, int j, float fx, float fy)
-{
-   /* TODO: fill this in */
-   return Vec2f(0.f,0.f);
 }
 
 void Particles::

@@ -26,11 +26,21 @@ init(float gravity_, int cell_nx, int cell_ny, float lx_)
    // allocate all the grid variables
    u.init(cell_nx+1, cell_ny);
    v.init(cell_nx, cell_ny+1);
-   pressure.init(cell_nx, cell_ny);
+   grad_weights_x.init(cell_nx, cell_ny);
+   grad_weights_y.init(cell_nx, cell_ny);
+   f_x.init(cell_nx, cell_ny);
+   f_y.init(cell_nx, cell_ny);
+   v_star_x.init(cell_nx, cell_ny);
+   v_star_y.init(cell_nx, cell_ny);
+   mass.init(cell_nx, cell_ny)
+
+
    marker.init(cell_nx, cell_ny);
    phi.init(cell_nx, cell_ny);
    du.init(cell_nx+1, cell_ny);
    dv.init(cell_nx, cell_ny+1);
+
+   //random apic stuff
    poisson.init(cell_nx, cell_ny);
    preconditioner.init(cell_nx, cell_ny);
    m.init(cell_nx, cell_ny);
@@ -423,6 +433,34 @@ float Grid::bspline_gradweight(float x) {
       return -.5*x*x + 2*x - 2;
    } else {
       return 0;
+   }
+}
+
+//STEP 3
+void Grid::compute_grid_forces(vector<Particle> P) {
+   for (int n = 0; n < np; n++) {
+      int low_i = max((int)((P[n].x(0) - 2) / grid.h), 0);
+      int low_j = max((int)((P[n].x(1) - 2) / grid.h), 0);
+      int high_i = min((int)((P[n].x(0) + 2) / grid.h), grid.mass.nx - 1);
+      int high_j = min((int)((P[n].x(1) + 2) / grid.h), grid.mass.ny - 1);
+
+      int index = 0;
+      for (int i = low_i; i <= high_i; i++) {
+         for (int j = low_j; j <= high_j; j++) {
+            double over_Jp = 0.;
+            if (P[p].def_plas.determinant() != 0.) {
+               over_Jp = 1.0 / p.def_plas.determinant();
+            }            
+            Eigen::Matrix2d d_energy = P[p].get_energy_deriv();
+            Eigen::Vector2d gw = P[n].grad_weights[index];
+            Eigen::Vector2d df = P[p].V * over_Jp * d_energy * P[p].def_elas.transpose() * gw;
+
+            f_x(i, j) += df(0);
+            f_y(i, j) += df(1);
+
+            index++;
+         }
+      }   
    }
 }
 

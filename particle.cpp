@@ -13,3 +13,8 @@ void Particle::updateDeformGradients(void) {
 	svd_u = svd.matrixU();
 }
 
+Eigen::Matrix2d Particle::get_energy_deriv(void) {
+	Matrix2d result = 2 * mu * (def_elas - rot_mat);
+	result += lambda * (def_elas.determinant() - 1) * def_elas.determinant() * def_elas.transpose();
+	return result;
+}

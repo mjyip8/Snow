@@ -18,6 +18,9 @@
 #define FLUIDCELL 1
 #define SOLIDCELL 2
 
+#define ACTIVE 1
+#define INACTIVE 0
+
 using namespace std;
 
 struct Grid{
@@ -31,13 +34,25 @@ struct Grid{
    Array2c marker; // identifies what sort of cell we have
    Array2f phi; // decays away from water into air (used for extrapolating velocity)
    Array2d pressure;
+
+   Array2c active;
+
+   //stuff for the elastoplastic solve
+   Array2d grad_weights_x;
+   Array2d grad_weights_y;
+   Array2d f_x;
+   Array2d f_y;
+   Array2d v_x;
+   Array2d v_y;
+
+   Array2d v_star_x;
+   Array2d v_star_y;
+
    // stuff for the pressure solve
    Array2x3f poisson;
    Array2d preconditioner;
    Array2d m;
    Array2d r, z, s;
-
-   map< Eigen::Vector2d , vector<Eigen::Vector2d> > node_gw;
 
    Grid(void)
    {}
@@ -45,7 +60,6 @@ struct Grid{
    Grid(float gravity_, int cell_nx, int cell_ny, float lx_)
    { 
       init(gravity_, cell_nx, cell_ny, lx_); 
-      node_gw.clear();
    }
 
    void init(float gravity_, int cell_nx, int cell_ny, float lx_);
@@ -103,9 +117,12 @@ struct Grid{
       pv=v.bilerp(i, j, fx, fy);
    }
 
-   
+
    float bspline_weight(float x);
    float bspline_gradweight(float x);
+
+   void compute_grid_forces(void);
+   void update_v(void);
 
    private:
    void init_phi(void);
