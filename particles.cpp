@@ -28,6 +28,7 @@ add_particle(const Vec2f &px, const Vec2f &pu)
 
 // STEP 1
 void Particles::transfer_mass_to_grid(void) {
+   grid.marker.zero();
    float fx, fy;
    float weight;
    grid.mass.zero();
@@ -60,11 +61,17 @@ void Particles::transfer_mass_to_grid(void) {
             
          }
       }
+
+      //adding to marker 
+      grid.marker(i, j) = FLUIDCELL;
    }
 }
 
 //STEP 1
 void Particles::transfer_v_to_grid(void) {
+   grid.v_x.zero();
+   grid.v_y.zero();
+
    for (int n = 0; n < np; n++) {
       for (int i = P[n].i ; i <= min(P[n].i + 1, grid.v_x.nx - 1); i++) {
          for (int j = P[n].j; j <= min(P[n].j + 1, grid.v_x.ny - 1); j++) {
@@ -110,6 +117,69 @@ void Particles::compute_vol_dens(void) {
       P[n].V = (P[n].d > 0.)? (1 / P[n].d) : 0.;
    }
 }
+
+void Particles::update_defgrad() {
+   for (int n = 0; n < np; n++) {
+      //compute velocity gradient
+      Eigen::Matrix2d v_grad = Eigen::Matrix2d::Zero();
+
+      int low_i = max((int)((P[n].x(0) - 2) / grid.h), 0);
+      int low_j = max((int)((P[n].x(1) - 2) / grid.h), 0);
+      int high_i = min((int)((P[n].x(0) + 2) / grid.h), grid.mass.nx - 1);
+      int high_j = min((int)((P[n].x(1) + 2) / grid.h), grid.mass.ny - 1);
+
+      // iterate for all grid cells within distance 2
+      for (int i = low_i; i <= high_i; i++) {
+         for (int j = low_j; j <= high_j; j++) {
+            v_grad += Eigen::Vector2d(v_star_x(i, j), v_star_y(i, j)) * P[n].grad_weights[index].transpose();
+         }
+      }
+
+      Eigen::Matrix2d def_star_elas = (Eigen::Matrix2d::Identity() + dt * v_grad) * (P[n].def_elas);
+      Eigen::Matrix2d def_star_plas = P[n].def_plas;
+
+      P[n].def_grad = def_star_elas * def_star_plas;
+      P[n].update_def_grads();
+   }
+}
+
+void Particles::transfer_v_to_p(void) {
+   for (int n = 0; n < np; n++) {
+      Eigen::Vector2d v_pic = Eigen::Vector2d::Zero();
+      Eigen::Vector2d v_flip = P[p].v;
+
+      int low_i = max((int)((P[n].x(0) - 2) / grid.h), 0);
+      int low_j = max((int)((P[n].x(1) - 2) / grid.h), 0);
+      int high_i = min((int)((P[n].x(0) + 2) / grid.h), grid.mass.nx - 1);
+      int high_j = min((int)((P[n].x(1) + 2) / grid.h), grid.mass.ny - 1);
+
+      // iterate for all grid cells within distance 2
+      index = 0;
+      for (int i = low_i; i <= high_i; i++) {
+         for (int j = low_j; j <= high_j; j++) {
+            Eigen::Vector2d v_star = Eigen::Vector2d(grid.v_star_x(i, j), grid.v_star_y(i, j));
+            Eigen::Vector2d v = Eigen::Vector2d(grid.v_x(i, j), gird.v_y(i, j));
+            v_pic +=  P[n].weights[index] * v_star;
+            v_flip += P[n].weights[index] * (v_star - v);
+            index++;
+         }
+      }
+
+      P[n].v = (1 - ALPHA) * v_pic + ALPHA * v_flip;
+   }
+}
+
+//STEP 9
+void Particle::resolve_collisions(void) {
+
+}
+
+void Particle::update_x(void) { 
+   for (int n = 0; n < np; n++) {
+      P[n].x = P[n].x + dt * P[n].v;
+   }
+}
+
 
 void Particles::
 update_from_grid(void)
@@ -165,4 +235,6 @@ write_to_file(const char *filename_format, ...)
 
    fclose(fp);
 }
+
+
 

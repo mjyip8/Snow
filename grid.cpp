@@ -11,7 +11,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include "grid.h"
-#include "particles.h"
 
 using namespace std;
 
@@ -26,14 +25,16 @@ init(float gravity_, int cell_nx, int cell_ny, float lx_)
    // allocate all the grid variables
    u.init(cell_nx+1, cell_ny);
    v.init(cell_nx, cell_ny+1);
-   grad_weights_x.init(cell_nx, cell_ny);
-   grad_weights_y.init(cell_nx, cell_ny);
-   f_x.init(cell_nx, cell_ny);
-   f_y.init(cell_nx, cell_ny);
-   v_star_x.init(cell_nx, cell_ny);
-   v_star_y.init(cell_nx, cell_ny);
-   mass.init(cell_nx, cell_ny)
 
+   grad_weights_x(cell_nx, cell_ny);
+   grad_weights_y(cell_nx, cell_ny);
+   f_x(cell_nx, cell_ny);
+   f_y(cell_nx, cell_ny);
+   v_x(cell_nx, cell_ny);
+   v_y(cell_nx, cell_ny);
+   v_star_x(cell_nx, cell_ny);
+   v_star_y(cell_nx, cell_ny);
+   mass(cell_nx, cell_ny);
 
    marker.init(cell_nx, cell_ny);
    phi.init(cell_nx, cell_ny);
@@ -149,10 +150,6 @@ apply_boundary_conditions(void)
       u(0,j)=u(1,j)=u(u.nx-1,j)=u(u.nx-2,j)=0;
    for(i=0; i<v.nx; ++i)
       v(i,0)=v(i,1)=v(i,v.ny-1)=v(i,v.ny-2)=0;
-}
-
-void Grid::make_elastoplastic(void) {
-   
 }
 
 void Grid::
@@ -417,9 +414,9 @@ add_gradient(void)
 }
 
 float Grid::bspline_weight(float x) {
-   if (x >= 0. && x < 1.) {
+   if (x >= 0. && x < h * 1.) {
       return 0.5 * x * x * x - x * x + (2./3.);
-   } else if (x >= 1. && x < 2) {
+   } else if (x >= h * 1. && x < h * 2) {
       return -(1./6.)*x*x*x + x*x - 2*x + (4./3.);
    } else {
       return 0;
@@ -427,9 +424,9 @@ float Grid::bspline_weight(float x) {
 }
 
 float Grid::bspline_gradweight(float x) {
-   if (x >= 0. && x < 1.) {
+   if (x >= 0. && x < h * 1.) {
       return 1.5*x*x - 2*x;
-   } else if (x >= 1. && x < 2) {
+   } else if (x >= h * 1. && x < h * 2) {
       return -.5*x*x + 2*x - 2;
    } else {
       return 0;
@@ -437,23 +434,25 @@ float Grid::bspline_gradweight(float x) {
 }
 
 //STEP 3
-void Grid::compute_grid_forces(vector<Particle> P) {
+void Grid::compute_grid_forces(vector<Particle>& P) {
+   int np = P.size();
+
    for (int n = 0; n < np; n++) {
-      int low_i = max((int)((P[n].x(0) - 2) / grid.h), 0);
-      int low_j = max((int)((P[n].x(1) - 2) / grid.h), 0);
-      int high_i = min((int)((P[n].x(0) + 2) / grid.h), grid.mass.nx - 1);
-      int high_j = min((int)((P[n].x(1) + 2) / grid.h), grid.mass.ny - 1);
+      int low_i = max((int)((P[n].x(0) - 2) / h), 0);
+      int low_j = max((int)((P[n].x(1) - 2) / h), 0);
+      int high_i = min((int)((P[n].x(0) + 2) / h), mass.nx - 1);
+      int high_j = min((int)((P[n].x(1) + 2) / h), mass.ny - 1);
 
       int index = 0;
       for (int i = low_i; i <= high_i; i++) {
          for (int j = low_j; j <= high_j; j++) {
             double over_Jp = 0.;
-            if (P[p].def_plas.determinant() != 0.) {
-               over_Jp = 1.0 / p.def_plas.determinant();
+            if (P[n].def_plas.determinant() != 0.) {
+               over_Jp = 1.0 / P[n].def_plas.determinant();
             }            
-            Eigen::Matrix2d d_energy = P[p].get_energy_deriv();
+            Eigen::Matrix2d d_energy = P[n].get_energy_deriv();
             Eigen::Vector2d gw = P[n].grad_weights[index];
-            Eigen::Vector2d df = P[p].V * over_Jp * d_energy * P[p].def_elas.transpose() * gw;
+            Eigen::Vector2d df = P[n].V * over_Jp * d_energy * P[n].def_elas.transpose() * gw;
 
             f_x(i, j) += df(0);
             f_y(i, j) += df(1);
@@ -461,6 +460,42 @@ void Grid::compute_grid_forces(vector<Particle> P) {
             index++;
          }
       }   
+   }
+}
+
+//STEP 4
+void update_v(void) {
+   v_star_x = v_x + dt * (1/mass) * f_x;
+   v_star_y = v_y + dt * (1/mass) * f_y;
+}
+
+//STEP 5
+void resolve_collisions(void) {
+   int i, j;
+   // first mark where solid is
+   for(j=0; j<marker.ny; ++j)
+      marker(0,j)=marker(marker.nx-1,j)=SOLIDCELL;
+   for(i=0; i<marker.nx; ++i)
+      marker(i,0)=marker(i,marker.ny-1)=SOLIDCELL;
+      // now makre sure nothing leaves the domain
+
+   for (int i = 0; i < marker.nx; ++i) {
+      for (int j = 0; j < marker.ny; ++j) {
+         if (marker(i, j) == FLUIDCELL) {
+            double x_star_x = v_star_x(i. j) * dt / h; 
+            double x_star_y = v_star_y(i. j) * dt / h; 
+
+            if (x_star_x < 2 * h || x_star_x > 1 - 2 * h) {
+               v_star_x(i, j) = 0;
+               v_star_y(i, j) *= FRICTION;
+            }
+
+            if (x_star_y < 2 * h || x_star_y > 1 - 2 * h) {
+               v_star_y(i, j) = 0;
+               v_star_x(i, j) *= FRICTION;
+            }
+         }
+      }
    }
 }
 

@@ -15,12 +15,12 @@ struct Particle {
  
 	double d;
 	double V;
-	Eigen::Vector2d grad_w;
+
 	Eigen::Matrix2d def_grad;
 	Eigen::Matrix2d def_elas;
 	Eigen::Matrix2d def_plas;
 	Eigen::Matrix2d rot_mat;
-	Eigen::Matrix2d scal_mat;
+	Eigen::Matrix2d str_mat;
 
 	Eigen::Matrix2d svd_v;
 	Eigen::Matrix2d svd_s;
@@ -44,10 +44,9 @@ struct Particle {
 		//setting as identity matrix
 		def_grad = Eigen::Matrix2d::Zero();
 		rot_mat = Eigen::Matrix2d::Identity();
-		scal_mat = Eigen::Matrix2d::Identity();
+		str_mat = Eigen::Matrix2d::Identity();
 		def_elas = Eigen::Matrix2d::Identity();
 		def_plas = Eigen::Matrix2d::Identity();
-		grad_w = Eigen::Vector2d::Zero();
 
 		svd_v = Eigen::Matrix2d::Identity();
 		svd_s = Eigen::Matrix2d::Identity();
@@ -57,7 +56,7 @@ struct Particle {
 		mu = (YOUNG_MOD)/ (2 * (1 + POSS_R));
 	}
 
-	void updateDeformGradients(void);
+	void update_def_grads(void);
 	Eigen::Matrix2d get_energy_deriv(void);
 
 	private:

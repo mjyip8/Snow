@@ -11,15 +11,14 @@
 #include "array2.h"
 #include "vec2.h"
 #include "util.h"
+#include "particles.h"
 #include <map>
 #include <Eigen/Dense>
 
 #define AIRCELL 0
 #define FLUIDCELL 1
 #define SOLIDCELL 2
-
-#define ACTIVE 1
-#define INACTIVE 0
+#define FRICTION 0.8
 
 using namespace std;
 
@@ -27,32 +26,37 @@ struct Grid{
    float gravity;
    float lx, ly;
    float h, overh;
+   double dt;
 
    // active variables
-   Array2f u, v; // staggered MAC grid of velocities
-   Array2f du, dv; // saved velocities and differences for particle update
+   //Array2f u, v; // staggered MAC grid of velocities
+   //Array2f du, dv; // saved velocities and differences for particle update
    Array2c marker; // identifies what sort of cell we have
-   Array2f phi; // decays away from water into air (used for extrapolating velocity)
-   Array2d pressure;
+   //Array2f phi; // decays away from water into air (used for extrapolating velocity)
+   //Array2d pressure;
 
-   Array2c active;
+   Eigen::ArrayXXd mass;
 
    //stuff for the elastoplastic solve
-   Array2d grad_weights_x;
-   Array2d grad_weights_y;
-   Array2d f_x;
-   Array2d f_y;
-   Array2d v_x;
-   Array2d v_y;
+   Eigen::ArrayXXd grad_weights_x;
+   Eigen::ArrayXXd grad_weights_y;
 
-   Array2d v_star_x;
-   Array2d v_star_y;
+   //for computing weights
+   Eigen::ArrayXXd f_x;
+   Eigen::ArrayXXd f_y;
+
+   //for computing velocity
+   Eigen::ArrayXXd v_x;
+   Eigen::ArrayXXd v_y;
+
+   Eigen::ArrayXXd v_star_x;
+   Eigen::ArrayXXd v_star_y;
 
    // stuff for the pressure solve
-   Array2x3f poisson;
-   Array2d preconditioner;
-   Array2d m;
-   Array2d r, z, s;
+   //Array2x3f poisson;
+   //Array2d preconditioner;
+   //Array2d m;
+   //Array2d r, z, s;
 
    Grid(void)
    {}
@@ -70,7 +74,6 @@ struct Grid{
    void extend_velocity(void);
    void apply_boundary_conditions(void);
    void make_incompressible(void);
-   void make_elastoplastic(void);
    void get_velocity_update(void);
 
    void bary_x(float x, int &i, float &fx)
@@ -121,8 +124,9 @@ struct Grid{
    float bspline_weight(float x);
    float bspline_gradweight(float x);
 
-   void compute_grid_forces(void);
+   void compute_grid_forces(vector<Particle>& P);
    void update_v(void);
+   void resolve_collisions(void);
 
    private:
    void init_phi(void);

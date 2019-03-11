@@ -87,6 +87,9 @@ void init_water_drop(Grid &grid, Particles &particles, int na, int nb)
 
 void advance_one_step(Grid &grid, Particles &particles, double dt, int framenum)
 {
+   grid.dt = dt;
+   particles.dt = dt;
+
    //STEP 1: Rasterize particle data to the grid
    particles.transfer_mass_to_grid();
    particles.transfer_v_to_grid();
@@ -95,12 +98,27 @@ void advance_one_step(Grid &grid, Particles &particles, double dt, int framenum)
    if (framenum == 1) {
       particles.compute_vol_dens();
    }
-
-   grid.compute_grid_forces();
+   //STEP 3: Computer Grid Forces
+   grid.compute_grid_forces(particles.P);
+   //STEP 4: Update v star
    grid.update_v();
+   //STEP 5: Enforce boundary conditions with friction 
+   grid.resolve_collisions();
+   //STEP 6 skipped because just using v_star for explicit time integration
+   //STEP 7: Update deformation gradient
+   particles.update_defgrad();
+   //STEP 8: Update particle velocities
+   particles.transfer_v_to_p();
+   //STEP 6: Updaate grid velocities to next timestep
+   grid.v_x = grid.v_star_x;
+   grid.v_y = grid.v_star_y;
+   //STEP 9: Handle particle-particle collisions
+   particles.resolve_collisions();
+   particles.update_x();
 
 
-   grid.save_velocities();
+
+   /*grid.save_velocities();
    grid.add_gravity(dt, USE_SPHERICAL_GRAV, GRAV_CENTER_X * grid.lx, GRAV_CENTER_Y  * grid.ly);
    grid.compute_distance_to_fluid();
    grid.extend_velocity();
@@ -108,7 +126,7 @@ void advance_one_step(Grid &grid, Particles &particles, double dt, int framenum)
    grid.make_incompressible();
    grid.extend_velocity();
    grid.get_velocity_update();
-   particles.update_from_grid();
+   particles.update_from_grid();*/
 }
 
 void advance_one_frame(Grid &grid, Particles &particles, double frametime, int framenum)

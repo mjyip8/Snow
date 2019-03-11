@@ -7,6 +7,7 @@
 
 #ifndef PARTICLES_H
 #define PARTICLES_H
+#define ALPHA 0.95
 
 #include <vector>
 #include "grid.h"
@@ -19,6 +20,7 @@ typedef enum SimulationTypeEnum { PIC = 0, FLIP = 1, APIC = 2 } SimulationType;
 struct Particles{
    Grid &grid;
    int np; // number of particles
+   double dt;
 
    std::vector<Particle> P;
 
@@ -39,10 +41,14 @@ struct Particles{
    void move_particles_in_grid(float dt);
    void write_to_file(const char *filename_format, ...);
 
-   
+
    void compute_vol_dens(void);
    void transfer_mass_to_grid(void);
    void transfer_v_to_grid(void);
+   void update_defgrad(void);
+   void transfer_v_to_p(void);
+   void resolve_collisions(void);
+   void update_x(void);
 
 
    private:
