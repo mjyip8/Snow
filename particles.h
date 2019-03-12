@@ -36,12 +36,11 @@ struct Particles{
    {}
 
    void add_particle(const Vec2f &px, const Vec2f &pu);
-   //void transfer_to_grid(void);
-   void update_from_grid(void);
-   void move_particles_in_grid(float dt);
    void write_to_file(const char *filename_format, ...);
 
 
+
+   void compute_grid_forces();
    void compute_vol_dens(void);
    void transfer_mass_to_grid(void);
    void transfer_v_to_grid(void);

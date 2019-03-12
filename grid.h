@@ -28,12 +28,7 @@ struct Grid{
    float h, overh;
    double dt;
 
-   // active variables
-   //Array2f u, v; // staggered MAC grid of velocities
-   //Array2f du, dv; // saved velocities and differences for particle update
    Array2c marker; // identifies what sort of cell we have
-   //Array2f phi; // decays away from water into air (used for extrapolating velocity)
-   //Array2d pressure;
 
    Eigen::ArrayXXd mass;
 
@@ -51,12 +46,6 @@ struct Grid{
 
    Eigen::ArrayXXd v_star_x;
    Eigen::ArrayXXd v_star_y;
-
-   // stuff for the pressure solve
-   //Array2x3f poisson;
-   //Array2d preconditioner;
-   //Array2d m;
-   //Array2d r, z, s;
 
    Grid(void)
    {}
@@ -124,23 +113,11 @@ struct Grid{
    float bspline_weight(float x);
    float bspline_gradweight(float x);
 
-   void compute_grid_forces(vector<Particle>& P);
    void update_v(void);
    void resolve_collisions(void);
 
    private:
-   void init_phi(void);
-   void sweep_phi(void);
-   void sweep_u(int i0, int i1, int j0, int j1);
-   void sweep_v(int i0, int i1, int j0, int j1);
-   void sweep_velocity(void);
-   void find_divergence(void);
-   void form_poisson(void);
-   void form_preconditioner(void);
-   void apply_poisson(const Array2d &x, Array2d &y);
-   void apply_preconditioner(const Array2d &x, Array2d &y, Array2d &temp);
-   void solve_pressure(int maxits, double tolerance);
-   void add_gradient(void);
+
 };
 
 #endif

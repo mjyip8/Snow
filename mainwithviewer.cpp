@@ -46,9 +46,17 @@ void display(void)
    glDisable(GL_LIGHTING);
    glColor3f(1, 1, 1);
    glBegin(GL_POINTS);
-   if( pParticles )
-      for(unsigned int i=0; i<pParticles->np; ++i)
-         glVertex2fv(pParticles->P[i].x.v);
+   
+   if( pParticles ) {
+      for(unsigned int i=0; i<pParticles->np; ++i) {
+         float x[2];
+         x[0] = pParticles->P[i].x(0);
+         x[1] = pParticles->P[i].x(1);
+         float * ptr = x;
+
+         glVertex2fv(ptr);
+      }
+   }
    glEnd();
 }
 
