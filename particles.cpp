@@ -171,7 +171,17 @@ void Particles::transfer_v_to_p(void) {
 
 //STEP 9
 void Particle::resolve_collisions(void) {
+   for (int n = 0; n < np; n++) {
+      Eigen::Vector2d x_star = P[n].x + dt * P[n].v;
 
+      if (x_star(0) < 2 * grid.h || x_star(0) > 1 - 2 * grid.h) {
+         P[n].v(0) = -FRICTION * P[n].v(0);
+      }
+
+      if (x_star(1) < 2 * grid.h || x_star(1) > 1 - 2 * grid.h) {
+         P[n].v(1) = -FRICTION * P[n].v(1);
+      }
+   }
 }
 
 void Particle::update_x(void) { 
