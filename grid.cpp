@@ -73,20 +73,22 @@ float Grid::CFL(void)
    return h/sqrt(maxv2);
 }
 
-float Grid::bspline_weight(float x) {
-   if (x >= 0. && x < h * 1.) {
+float Grid::bspline_weight(float n) {
+   float x = abs(n);
+   if (x >= 0. && x < 1.) {
       return 0.5 * x * x * x - x * x + (2./3.);
-   } else if (x >= h * 1. && x < h * 2) {
+   } else if (x >= 1. && x < 2.) {
       return -(1./6.)*x*x*x + x*x - 2*x + (4./3.);
    } else {
       return 0;
    }
 }
 
-float Grid::bspline_gradweight(float x) {
-   if (x >= 0. && x < h * 1.) {
+float Grid::bspline_gradweight(float n) {
+   float x = abs(n);
+   if (x >= 0. && x < 1.) {
       return 1.5*x*x - 2*x;
-   } else if (x >= h * 1. && x < h * 2) {
+   } else if (x >= 1. && x < 2.) {
       return -.5*x*x + 2*x - 2;
    } else {
       return 0;
@@ -95,8 +97,8 @@ float Grid::bspline_gradweight(float x) {
 
 //STEP 4
 void Grid::update_v(void) {
-   v_star_x = v_x + dt * (1/mass) * f_x;
-   v_star_y = v_y + dt * (1/mass) * f_y;
+   v_star_x = v_x + dt * f_x / mass;
+   v_star_y = v_y + dt * (Eigen::ArrayXXd::Constant(v_star_y.rows(), v_star_y.cols(), -gravity) + f_y / mass);
 }
 
 //STEP 5
@@ -107,13 +109,13 @@ void Grid::resolve_collisions(void) {
       marker(0,j)=marker(marker.nx-1,j)=SOLIDCELL;
    for(i=0; i<marker.nx; ++i)
       marker(i,0)=marker(i,marker.ny-1)=SOLIDCELL;
-      // now makre sure nothing leaves the domain
+      // now make sure nothing leaves the domain
 
    for (int i = 0; i < marker.nx; ++i) {
       for (int j = 0; j < marker.ny; ++j) {
          if (marker(i, j) == FLUIDCELL) {
-            double x_star_x = v_star_x(i, j) * dt / h; 
-            double x_star_y = v_star_y(i, j) * dt / h; 
+            double x_star_x = i * h + v_star_x(i, j) * dt; 
+            double x_star_y = j * h + v_star_y(i, j) * dt; 
 
             if (x_star_x < 2 * h || x_star_x > 1 - 2 * h) {
                v_star_x(i, j) = 0;

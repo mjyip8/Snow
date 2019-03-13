@@ -62,8 +62,8 @@ struct Grid{
    void init(float gravity_, int cell_nx, int cell_ny, float lx_);
    float CFL(void);
 
-   float bspline_weight(float x);
-   float bspline_gradweight(float x);
+   float bspline_weight(float n);
+   float bspline_gradweight(float n);
 
    void update_v(void);
    void resolve_collisions(void);

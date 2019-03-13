@@ -42,7 +42,7 @@ struct Particle {
 		weight_nodes.clear();
 		grad_weights.clear();
 		//setting as identity matrix
-		def_grad = Eigen::Matrix2d::Zero();
+		def_grad = Eigen::Matrix2d::Identity();
 		rot_mat = Eigen::Matrix2d::Identity();
 		str_mat = Eigen::Matrix2d::Identity();
 		def_elas = Eigen::Matrix2d::Identity();

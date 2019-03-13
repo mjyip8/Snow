@@ -42,6 +42,7 @@ int main(int argc, char **argv)
    }
    Particles particles(grid, sType);
 
+   cout << "entering init_water_drop" << endl;
    init_water_drop(grid, particles, 2, 2);
    particles.write_to_file("%s/frameparticles%04d", outputpath.c_str(), 0);
 

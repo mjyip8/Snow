@@ -112,7 +112,9 @@ int main(int argc, char **argv)
    }
    pParticles = new Particles(*pGrid, sType);
 
+   cout << "gluvi init" << endl;
    Gluvi::init("fluid simulation viewer woohoo", &argc, argv);
+   cout << "init init_water_drop" << endl;
    init_water_drop(*pGrid, *pParticles, 2, 2);
    pParticles->write_to_file("%s/frameparticles%04d", outputpath.c_str(), 0);
    stepCount = 0;

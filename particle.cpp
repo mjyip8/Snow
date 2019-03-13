@@ -24,6 +24,9 @@ void Particle::update_def_grads(void) {
 
 Eigen::Matrix2d Particle::get_energy_deriv(void) {
 	Eigen::Matrix2d result = 2 * mu * (def_elas - rot_mat);
-	result += lambda * (def_elas.determinant() - 1) * def_elas.determinant() * def_elas.transpose();
+	result += lambda * (def_elas.determinant() - 1) * def_elas.determinant() * def_elas.transpose().inverse();
+	if (result != Eigen::Matrix2d::Zero()) {
+		cout << "energy deriv = " << result << endl;
+	}
 	return result;
 }
