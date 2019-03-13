@@ -53,7 +53,6 @@ void Particles::transfer_mass_to_grid(void) {
 
             Eigen::Vector2d grad_weight = Eigen::Vector2d(wx * grid.bspline_gradweight((P[n].x[0] - i * grid.h) / grid.h),
                                        wy * grid.bspline_gradweight((P[n].x[1] - j * grid.h) / grid.h));
-            cout << grad_weight << endl;
             P[n].grad_weights.push_back(grad_weight);
             grid.grad_weights_x(i, j) += grad_weight(0);
             grid.grad_weights_y(i, j) += grad_weight(1);
@@ -90,9 +89,6 @@ void Particles::transfer_v_to_grid(void) {
       for (int j = 0; j < grid.v_y.cols(); j++) {
          grid.v_x(i, j) = (grid.mass(i, j) == 0) ? 0 : grid.v_x(i, j) / grid.mass(i, j);
          grid.v_y(i, j) = (grid.mass(i, j) == 0) ? 0 : grid.v_y(i, j) / grid.mass(i, j);
-         //cout << "grid m = " << grid.mass(i, j) << endl;
-         //cout << "grad_weights = (" << grid.grad_weights_x(i, j) << ", " << grid.grad_weights_y(i, j) << ")" << endl; 
-         //cout << "grid v = (" << grid.v_x(i, j) << ", " << grid.v_y(i, j) << ")" << endl;
       }
    }
 }
@@ -140,12 +136,15 @@ void Particles::compute_grid_forces(void) {
             double over_Jp = 0.;
             if (P[n].def_plas.determinant() != 0.) {
                over_Jp = 1.0 / P[n].def_plas.determinant();
-            }            
+            }           
             Eigen::Matrix2d d_energy = P[n].get_energy_deriv();
             Eigen::Vector2d gw = P[n].grad_weights[index];
             Eigen::Vector2d df = P[n].V * over_Jp * d_energy * P[n].def_elas.transpose() * gw;
-            grid.f_x(i, j) += df(0);
-            grid.f_y(i, j) += df(1);
+            df(0) = clamp(df(0), 0., 1.);
+            df(1) = clamp(df(1), 0., 1.);
+
+            grid.f_x(i, j) -= df(0);
+            grid.f_y(i, j) -= df(1);
 
             index++;
          }
