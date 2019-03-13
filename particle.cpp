@@ -7,7 +7,7 @@
 using namespace std;
 
 void Particle::update_def_grads(void) {
-	Eigen::Jacobi<Matrix2d> svd(def_elas, ComputeFullV | ComputeFullU);
+	Eigen::JacobiSVD<Eigen::Matrix2d> svd(def_elas, Eigen::ComputeFullV | Eigen::ComputeFullU);
 	svd_v = svd.matrixV();
 	Eigen::Vector2d singVal = svd.singularValues();
 	singVal(0) = clamp(singVal(0), CRIT_COMPRESS, CRIT_STRETCH);
@@ -23,7 +23,7 @@ void Particle::update_def_grads(void) {
 }
 
 Eigen::Matrix2d Particle::get_energy_deriv(void) {
-	Matrix2d result = 2 * mu * (def_elas - rot_mat);
+	Eigen::Matrix2d result = 2 * mu * (def_elas - rot_mat);
 	result += lambda * (def_elas.determinant() - 1) * def_elas.determinant() * def_elas.transpose();
 	return result;
 }

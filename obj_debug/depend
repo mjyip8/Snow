@@ -1,4 +1,5 @@
 obj_debug/grid.o: grid.cpp grid.h array2.h util.h
+obj_debug/particle.o: particle.cpp particle.h array2.h util.h 
 obj_debug/particles.o: particles.cpp particles.h grid.h array2.h util.h \
   vec2.h
 obj_debug/main.o: main.cpp particles.h grid.h array2.h util.h vec2.h \

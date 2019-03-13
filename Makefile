@@ -1,9 +1,9 @@
 # This is for GNU make; other versions of make may not run correctly.
 
 MAIN_PROGRAM = flip2d
-SRC = grid.cpp particles.cpp main.cpp
+SRC = grid.cpp particle.cpp particles.cpp main.cpp
 MAIN_WITH_VIEWER = flip2dv
-SRC_WITH_VIEWER = grid.cpp particles.cpp mainwithviewer.cpp viewflip2d/gluvi.cpp
+SRC_WITH_VIEWER = grid.cpp particle.cpp particles.cpp mainwithviewer.cpp viewflip2d/gluvi.cpp
 
 include Makefile.defs
 

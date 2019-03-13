@@ -10,7 +10,7 @@
 
 struct Particle {
 	Eigen::Vector2d x;
-	Eigen::Vector2d u; // positions and velocities
+	Eigen::Vector2d v; // positions and velocities
 	Eigen::Vector2d x_star; //deformed position
  
 	double d;
@@ -37,7 +37,7 @@ struct Particle {
 	int i;
 	int j;
 
-	Particle(Eigen::Vector2d X, Eigen::Vector2d U): x(X), u(U), 
+	Particle(Eigen::Vector2d X, Eigen::Vector2d U): x(X), v(U), 
 	d(0.), V(0.), i(0), j(0) {
 		weight_nodes.clear();
 		grad_weights.clear();

@@ -99,7 +99,7 @@ void advance_one_step(Grid &grid, Particles &particles, double dt, int framenum)
       particles.compute_vol_dens();
    }
    //STEP 3: Computer Grid Forces
-   grid.compute_grid_forces(particles.P);
+   particles.compute_grid_forces();
    //STEP 4: Update v star
    grid.update_v();
    //STEP 5: Enforce boundary conditions with friction 
@@ -115,18 +115,6 @@ void advance_one_step(Grid &grid, Particles &particles, double dt, int framenum)
    //STEP 9: Handle particle-particle collisions
    particles.resolve_collisions();
    particles.update_x();
-
-
-
-   /*grid.save_velocities();
-   grid.add_gravity(dt, USE_SPHERICAL_GRAV, GRAV_CENTER_X * grid.lx, GRAV_CENTER_Y  * grid.ly);
-   grid.compute_distance_to_fluid();
-   grid.extend_velocity();
-   grid.apply_boundary_conditions();
-   grid.make_incompressible();
-   grid.extend_velocity();
-   grid.get_velocity_update();
-   particles.update_from_grid();*/
 }
 
 void advance_one_frame(Grid &grid, Particles &particles, double frametime, int framenum)

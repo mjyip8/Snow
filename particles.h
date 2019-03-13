@@ -35,10 +35,8 @@ struct Particles{
        sum_u(grid_.pressure.nx+1, grid_.pressure.ny+1), sum_v(grid_.pressure.nx+1, grid_.pressure.ny+1), simType( simType_ )
    {}
 
-   void add_particle(const Vec2f &px, const Vec2f &pu);
+   void add_particle(const Eigen::Vector2d &px, const Eigen::Vector2d &pu);
    void write_to_file(const char *filename_format, ...);
-
-
 
    void compute_grid_forces();
    void compute_vol_dens(void);

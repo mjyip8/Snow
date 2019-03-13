@@ -11,7 +11,6 @@
 #include "array2.h"
 #include "vec2.h"
 #include "util.h"
-#include "particles.h"
 #include <map>
 #include <Eigen/Dense>
 
@@ -28,7 +27,12 @@ struct Grid{
    float h, overh;
    double dt;
 
+   // active variables
+   //Array2f u, v; // staggered MAC grid of velocities
+   //Array2f du, dv; // saved velocities and differences for particle update
    Array2c marker; // identifies what sort of cell we have
+   Array2f phi; // decays away from water into air (used for extrapolating velocity)
+   Array2d pressure;
 
    Eigen::ArrayXXd mass;
 
@@ -57,58 +61,6 @@ struct Grid{
 
    void init(float gravity_, int cell_nx, int cell_ny, float lx_);
    float CFL(void);
-   void save_velocities(void);
-   void add_gravity(float dt, bool centered, float cx, float cy);
-   void compute_distance_to_fluid(void);
-   void extend_velocity(void);
-   void apply_boundary_conditions(void);
-   void make_incompressible(void);
-   void get_velocity_update(void);
-
-   void bary_x(float x, int &i, float &fx)
-   {
-      float sx=x*overh;
-      i=(int)sx;
-      fx=sx-floor(sx);
-   }
-
-   void bary_x_centre(float x, int &i, float &fx)
-   {
-      float sx=x*overh-0.5;
-      i=(int)sx;
-      if(i<0){ i=0; fx=0.0; }
-      else if(i>pressure.nx-2){ i=pressure.nx-2; fx=1.0; }
-      else{ fx=sx-floor(sx); }
-   }
-
-   void bary_y(float y, int &j, float &fy)
-   {
-      float sy=y*overh;
-      j=(int)sy;
-      fy=sy-floor(sy);
-   }
-
-   void bary_y_centre(float y, int &j, float &fy)
-   {
-      float sy=y*overh-0.5;
-      j=(int)sy;
-      if(j<0){ j=0; fy=0.0; }
-      else if(j>pressure.ny-2){ j=pressure.ny-2; fy=1.0; }
-      else{ fy=sy-floor(sy); }
-   }
-
-   void bilerp_uv(float px, float py, float &pu, float &pv)
-   {
-      int i, j;
-      float fx, fy;
-      bary_x(px, i, fx);
-      bary_y_centre(py, j, fy);
-      pu=u.bilerp(i, j, fx, fy);
-      bary_x_centre(px, i, fx);
-      bary_y(py, j, fy);
-      pv=v.bilerp(i, j, fx, fy);
-   }
-
 
    float bspline_weight(float x);
    float bspline_gradweight(float x);
@@ -117,7 +69,8 @@ struct Grid{
    void resolve_collisions(void);
 
    private:
-
+      float get_max(void);
+      void init_phi(void);
 };
 
 #endif
