@@ -17,7 +17,7 @@
 #define AIRCELL 0
 #define FLUIDCELL 1
 #define SOLIDCELL 2
-#define FRICTION 0.8
+#define FRICTION 0.1
 
 using namespace std;
 

@@ -131,7 +131,7 @@ void advance_one_step(Grid &grid, Particles &particles, double dt, int framenum)
    particles.transfer_v_to_p();
    cout << "out transfer_v_to_p" << endl;
 
-   //STEP 6: Updaate grid velocities to next timestep
+   //STEP 6: Update grid velocities to next timestep
    grid.v_x = grid.v_star_x;
    grid.v_y = grid.v_star_y;
    //STEP 9: Handle particle-particle collisions
