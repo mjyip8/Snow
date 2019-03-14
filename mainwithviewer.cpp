@@ -45,7 +45,7 @@ void display(void)
 {
    glDisable(GL_LIGHTING);
    
-   glColor3f(0.77, .97, .99);
+   glColor3f(1, 1, 1);
    glBegin(GL_POINTS);
    
    if( pParticles ) {
@@ -59,8 +59,6 @@ void display(void)
       }
    }
    glEnd();
-
-   glColor3f(1, 1, 1);
 
    glBegin(GL_LINES);
     glVertex2f(0.03, 0.03);
