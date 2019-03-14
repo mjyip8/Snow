@@ -11,7 +11,7 @@
 
 
 #define SIMULATION_TYPE (APIC) // default simtype: APIC, FLIP, or PIC
-#define INIT_DROP_RADIUS (0.05)
+#define INIT_DROP_RADIUS (0.06)
 #define INIT_FLOOR_SIZE (0.05)
 #define USE_SPHERICAL_GRAV (false)
 // the following only matter when USE_SPHERICAL_GRAV is true
@@ -92,57 +92,36 @@ void advance_one_step(Grid &grid, Particles &particles, double dt, int framenum)
    particles.dt = dt;
 
    //STEP 1: Rasterize particle data to the grid
-   cout << "in transfer_mass_to_grid" << endl;
    particles.transfer_mass_to_grid();
-   cout << "out transfer_mass_to_grid" << endl;
-   cout << "in transfer_v_to_grid" << endl;
    particles.transfer_v_to_grid();
-   cout << "out transfer_v_to_grid" << endl;
 
    //STEP 2: Compute particle volumes and densities
    if (framenum == 1) {
-      cout << "in compute_vol_dens" << endl;
       particles.compute_vol_dens();
-      cout << "out compute_vol_dens" << endl;
    }
    //STEP 3: Computer Grid Forces
-   cout << "in compute_grid_forces" << endl;
    particles.compute_grid_forces();
-   cout << "out compute_grid_forces" << endl;
 
    //STEP 4: Update v star
-   cout << "in update_v" << endl;
    grid.update_v();
-   cout << "out update_v" << endl;
 
    //STEP 5: Enforce boundary conditions with friction 
-   cout << "in resolve_collisions" << endl;
    grid.resolve_collisions();
-   cout << "out resolve_collisions" << endl;
 
-   //STEP 6 skipped because just using v_star for explicit time integration
+   //STEP 6: Solve for v at next time step
+   grid.update_vn1();
+
    //STEP 7: Update deformation gradient
-   cout << "in update_defgrad" << endl;
    particles.update_defgrad();
-   cout << "out update_defgrad" << endl;
 
    //STEP 8: Update particle velocities
-   cout << "in transfer_v_to_p" << endl;
    particles.transfer_v_to_p();
-   cout << "out transfer_v_to_p" << endl;
 
-   //STEP 6: Update grid velocities to next timestep
-   grid.v_x = grid.v_star_x;
-   grid.v_y = grid.v_star_y;
    //STEP 9: Handle particle-particle collisions
-   cout << "in particles resolve_collisions" << endl;
    particles.resolve_collisions();
-   cout << "out particles resolve_collisions" << endl;
 
-   cout << "in update_x" << endl;
+   //STEP 10: Update particle positions
    particles.update_x();
-   cout << "out update_x" << endl;
-
 }
 
 void advance_one_frame(Grid &grid, Particles &particles, double frametime, int framenum)

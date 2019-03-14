@@ -29,6 +29,8 @@ init(float gravity_, int cell_nx, int cell_ny, float lx_)
    f_y.resize(cell_nx, cell_ny);
    v_x.resize(cell_nx, cell_ny);
    v_y.resize(cell_nx, cell_ny);
+   v_x_n1.resize(cell_nx, cell_ny);
+   v_y_n1.resize(cell_nx, cell_ny);
    v_star_x.resize(cell_nx, cell_ny);
    v_star_y.resize(cell_nx, cell_ny);
    mass.resize(cell_nx, cell_ny);
@@ -99,8 +101,8 @@ float Grid::bspline_gradweight(float n) {
 void Grid::update_v(void) {
    for (int i = 0; i < v_star_x.rows(); i++) {
       for (int j = 0; j < v_star_y.cols(); j++) {
-         v_star_x(i, j) = (mass(i, j) == 0)? v_x(i, j) : v_x(i, j) + dt * f_x(i, j) / mass(i, j);
-         v_star_y(i, j) = (mass(i, j) == 0)? v_y(i, j) : v_y(i, j) + dt * (-gravity + f_y(i, j) / mass(i, j));
+         v_star_x(i, j) = (mass(i, j) == 0)? 0 : v_x(i, j) + dt * (15 + f_x(i, j) / mass(i, j));
+         v_star_y(i, j) = (mass(i, j) == 0)? 0 : v_y(i, j) + dt * (-gravity + f_y(i, j) / mass(i, j));
       }
    }
 }
@@ -133,5 +135,11 @@ void Grid::resolve_collisions(void) {
          }
       }
    }
+}
+
+//STEP 6
+void Grid::update_vn1(void) {
+   v_x_n1 = v_star_x;
+   v_y_n1 = v_star_y;
 }
 

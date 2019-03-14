@@ -91,7 +91,7 @@ int main(int argc, char **argv)
    float gravity = 9.8;
    if( USE_SPHERICAL_GRAV )
       gravity *= GRAV_FACTOR;
-   pGrid = new Grid(gravity, 30, 30, 1);
+   pGrid = new Grid(gravity, 50, 50, 1);
    SimulationType sType = SIMULATION_TYPE;
    
    outputpath=".";

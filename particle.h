@@ -7,6 +7,7 @@
 #define POSS_R (0.2)
 #define CRIT_STRETCH (1 + 0.0075)
 #define CRIT_COMPRESS (1 - 0.025)
+#define HARDEN (10.0)
 
 struct Particle {
 	Eigen::Vector2d x;

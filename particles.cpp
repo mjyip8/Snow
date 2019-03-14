@@ -69,12 +69,10 @@ void Particles::transfer_mass_to_grid(void) {
 
 //STEP 1
 void Particles::transfer_v_to_grid(void) {
-   //grid.v_x = Eigen::ArrayXXd::Zero(grid.v_x.rows(), grid.v_x.cols());
-   //grid.v_y = Eigen::ArrayXXd::Constant(grid.v_x.rows(), grid.v_x.cols(), -5);
-
-
    grid.v_x = Eigen::ArrayXXd::Zero(grid.v_x.rows(), grid.v_x.cols());
    grid.v_y = Eigen::ArrayXXd::Zero(grid.v_y.rows(), grid.v_y.cols());
+   grid.v_x_n1 = Eigen::ArrayXXd::Zero(grid.v_x.rows(), grid.v_x.cols());
+   grid.v_y_n1 = Eigen::ArrayXXd::Zero(grid.v_y.rows(), grid.v_y.cols());
 
    for (int n = 0; n < np; n++) {
       int low_i = max(P[n].i - 2, 0);
@@ -114,7 +112,7 @@ void Particles::compute_vol_dens(void) {
       int index = 0;
       for (int i = low_i; i <= high_i; i++) {
          for (int j = low_j; j <= high_j; j++) {
-            P[n].d += (P[n].weights[index] / (grid.h * grid.h));
+            P[n].d += (grid.mass(i, j) * P[n].weights[index] / (grid.h * grid.h));
             index++;
          }
       }
@@ -125,7 +123,6 @@ void Particles::compute_vol_dens(void) {
 
 //STEP 3
 void Particles::compute_grid_forces(void) {
-   cout << "entering compute_grid_forces" << endl;
    grid.f_x = Eigen::ArrayXXd::Zero(grid.f_x.rows(), grid.f_x.cols());
    grid.f_y = Eigen::ArrayXXd::Zero(grid.f_y.rows(), grid.f_y.cols());
 
@@ -139,14 +136,10 @@ void Particles::compute_grid_forces(void) {
 
       int index = 0;
       for (int i = low_i; i <= high_i; i++) {
-         for (int j = low_j; j <= high_j; j++) {
-            double over_Jp = 0.;
-            if (P[n].def_grad.determinant() != 0.) {
-               over_Jp = 1.0 / P[n].def_grad.determinant();
-            }           
+         for (int j = low_j; j <= high_j; j++) {     
             Eigen::Matrix2d d_energy = P[n].get_energy_deriv();
             Eigen::Vector2d gw = P[n].grad_weights[index];
-            Eigen::Vector2d df = P[n].V * over_Jp * d_energy * gw;
+            Eigen::Vector2d df = P[n].V * d_energy * gw;
             df(0) = clamp(df(0), 0., 1.);
             df(1) = clamp(df(1), 0., 1.);
 
@@ -158,14 +151,14 @@ void Particles::compute_grid_forces(void) {
          }
       }
    }
-   cout << "leaving compute_grid_forces" << endl;
 
 }
 
+//STEP 7
 void Particles::update_defgrad() {
    for (int n = 0; n < np; n++) {
       //compute velocity gradient
-      Eigen::Matrix2d v_grad = Eigen::Matrix2d::Zero();
+      Eigen::Matrix2d v_grad_n1 = Eigen::Matrix2d::Zero();
 
       int low_i = max(P[n].i - 2, 0);
       int low_j = max(P[n].j - 2, 0);
@@ -176,16 +169,16 @@ void Particles::update_defgrad() {
       // iterate for all grid cells within distance 2
       for (int i = low_i; i <= high_i; i++) {
          for (int j = low_j; j <= high_j; j++) {
-            v_grad += Eigen::Vector2d(grid.v_star_x(i, j), grid.v_star_y(i, j)) * P[n].grad_weights[index].transpose();
+            v_grad_n1 += Eigen::Vector2d(grid.v_x_n1(i, j), grid.v_y_n1(i, j)) * P[n].grad_weights[index].transpose();
             index++;
          }
       }
 
-      Eigen::Matrix2d def_star_elas = (Eigen::Matrix2d::Identity() + dt * v_grad) * (P[n].def_elas);
-
+      Eigen::Matrix2d def_star_elas = (Eigen::Matrix2d::Identity() + dt * v_grad_n1) * (P[n].def_elas);
       Eigen::Matrix2d def_star_plas = P[n].def_plas;
 
       P[n].def_grad = def_star_elas * def_star_plas;
+      P[n].def_elas = def_star_elas;
       P[n].update_def_grads();
    }
 }

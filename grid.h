@@ -47,6 +47,9 @@ struct Grid{
    //for computing velocity
    Eigen::ArrayXXd v_x;
    Eigen::ArrayXXd v_y;
+   //velocity at next time step
+   Eigen::ArrayXXd v_x_n1;
+   Eigen::ArrayXXd v_y_n1;
 
    Eigen::ArrayXXd v_star_x;
    Eigen::ArrayXXd v_star_y;
@@ -67,6 +70,7 @@ struct Grid{
 
    void update_v(void);
    void resolve_collisions(void);
+   void update_vn1(void);
 
    private:
       float get_max(void);
