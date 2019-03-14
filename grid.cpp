@@ -99,9 +99,14 @@ float Grid::bspline_gradweight(float n) {
 
 //STEP 4
 void Grid::update_v(void) {
+   v_star_x = Eigen::ArrayXXd::Zero(v_star_x.rows(), v_star_x.cols());
+   v_star_y = Eigen::ArrayXXd::Zero(v_star_y.rows(), v_star_y.cols());
+   v_x_n1 = Eigen::ArrayXXd::Zero(v_x_n1.rows(), v_x_n1.cols());
+   v_y_n1 = Eigen::ArrayXXd::Zero(v_y_n1.rows(), v_y_n1.cols());
+
    for (int i = 0; i < v_star_x.rows(); i++) {
       for (int j = 0; j < v_star_y.cols(); j++) {
-         v_star_x(i, j) = (mass(i, j) == 0)? 0 : v_x(i, j) + dt * (15 + f_x(i, j) / mass(i, j));
+         v_star_x(i, j) = (mass(i, j) == 0)? 0 : v_x(i, j) + dt * (f_x(i, j) / mass(i, j));
          v_star_y(i, j) = (mass(i, j) == 0)? 0 : v_y(i, j) + dt * (-gravity + f_y(i, j) / mass(i, j));
       }
    }
@@ -126,6 +131,11 @@ void Grid::resolve_collisions(void) {
             if (x_star_x < 2 * h || x_star_x > 1 - 2 * h) {
                v_star_x(i, j) = 0;
                v_star_y(i, j) *= FRICTION;
+            }
+
+            if (x_star_y > 1 - 2 * h) {
+               v_star_y(i, j) = 0;
+               v_star_x(i, j) *= FRICTION;
             }
 
             if (x_star_y < 2 * h || x_star_y > 1 - 2 * h) {

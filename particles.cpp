@@ -71,8 +71,6 @@ void Particles::transfer_mass_to_grid(void) {
 void Particles::transfer_v_to_grid(void) {
    grid.v_x = Eigen::ArrayXXd::Zero(grid.v_x.rows(), grid.v_x.cols());
    grid.v_y = Eigen::ArrayXXd::Zero(grid.v_y.rows(), grid.v_y.cols());
-   grid.v_x_n1 = Eigen::ArrayXXd::Zero(grid.v_x.rows(), grid.v_x.cols());
-   grid.v_y_n1 = Eigen::ArrayXXd::Zero(grid.v_y.rows(), grid.v_y.cols());
 
    for (int n = 0; n < np; n++) {
       int low_i = max(P[n].i - 2, 0);
@@ -85,7 +83,6 @@ void Particles::transfer_v_to_grid(void) {
          for (int j = low_j; j <= high_j; j++) {
             grid.v_x(i, j) += P[n].weights[index] * P[n].v(0);
             grid.v_y(i, j) += P[n].weights[index] * P[n].v(1);
-            index = index + 1;
          } 
       }
    }
@@ -183,6 +180,7 @@ void Particles::update_defgrad() {
    }
 }
 
+//STEP 8
 void Particles::transfer_v_to_p(void) {
    for (int n = 0; n < np; n++) {
       Eigen::Vector2d v_pic = Eigen::Vector2d::Zero();
@@ -197,10 +195,10 @@ void Particles::transfer_v_to_p(void) {
       int index = 0;
       for (int i = low_i; i <= high_i; i++) {
          for (int j = low_j; j <= high_j; j++) {
-            Eigen::Vector2d v_star = Eigen::Vector2d(grid.v_star_x(i, j), grid.v_star_y(i, j));
+            Eigen::Vector2d v_n1 = Eigen::Vector2d(grid.v_x_n1(i, j), grid.v_y_n1(i, j));
             Eigen::Vector2d v = Eigen::Vector2d(grid.v_x(i, j), grid.v_y(i, j));
-            v_pic +=  P[n].weights[index] * v_star;
-            v_flip += P[n].weights[index] * (v_star - v);
+            v_pic +=  P[n].weights[index] * v_n1;
+            v_flip += P[n].weights[index] * (v_n1 - v);
             index++;
          }
       }
@@ -225,6 +223,7 @@ void Particles::resolve_collisions(void) {
    }
 }
 
+//STEP 10
 void Particles::update_x(void) { 
    for (int n = 0; n < np; n++) {
       P[n].x = P[n].x + dt * P[n].v;

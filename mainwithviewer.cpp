@@ -44,7 +44,8 @@ void set_view(float &bottom, float &left, float &height)
 void display(void)
 {
    glDisable(GL_LIGHTING);
-   glColor3f(1, 1, 1);
+   
+   glColor3f(0.77, .97, .99);
    glBegin(GL_POINTS);
    
    if( pParticles ) {
@@ -57,6 +58,17 @@ void display(void)
          glVertex2fv(ptr);
       }
    }
+   glEnd();
+
+   glColor3f(1, 1, 1);
+
+   glBegin(GL_LINES);
+    glVertex2f(0.03, 0.03);
+    glVertex2f(0.97, 0.03);
+   glEnd();
+   glBegin(GL_LINES);
+    glVertex2f(0.97, 0.03);
+    glVertex2f(0.97, 0.97);
    glEnd();
 }
 

@@ -11,8 +11,8 @@
 
 
 #define SIMULATION_TYPE (APIC) // default simtype: APIC, FLIP, or PIC
-#define INIT_DROP_RADIUS (0.06)
-#define INIT_FLOOR_SIZE (0.05)
+#define INIT_DROP_RADIUS (0.07)
+#define INIT_FLOOR_SIZE (0.0)
 #define USE_SPHERICAL_GRAV (false)
 // the following only matter when USE_SPHERICAL_GRAV is true
 #define INIT_VEL_MAGNITUDE (0.55)
@@ -55,7 +55,7 @@ void init_water_drop(Grid &grid, Particles &particles, int na, int nb)
    int i, j, a, b;
    float x, y, phi;
    float vx, vy;
-   vx = 0;
+   vx = 2;
    vy = 0;
 
    for(i=1; i<grid.marker.nx-1; ++i){
@@ -83,7 +83,6 @@ void init_water_drop(Grid &grid, Particles &particles, int na, int nb)
          }
       }
    }
-   cout << "leaving init water drop" << endl;
 }
 
 void advance_one_step(Grid &grid, Particles &particles, double dt, int framenum)
