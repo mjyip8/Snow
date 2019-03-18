@@ -13,6 +13,7 @@ void Particle::update_def_grads(double dt) {
 	Eigen::JacobiSVD<Eigen::Matrix2d> svd(def_elas, Eigen::ComputeFullV | Eigen::ComputeFullU);
 	svd_v = svd.matrixV();
 	Eigen::Vector2d singVal = svd.singularValues();
+
 	singVal(0) = clamp(singVal(0), CRIT_COMPRESS, CRIT_STRETCH);
 	singVal(1) = clamp(singVal(1), CRIT_COMPRESS, CRIT_STRETCH);
 	svd_s = singVal.asDiagonal();
@@ -25,11 +26,20 @@ void Particle::update_def_grads(double dt) {
 	str_mat = svd_v * svd_s * svd_v.transpose();
 }
 
+/*Eigen::Matrix2d Particle::get_energy_deriv(void) {
+	double Je = def_elas.determinant();
+	//double harden = exp(HARDEN * (1 - def_plas.determinant()));
+	Eigen::Matrix2d result = 2 * mu * (def_elas - rot_mat) * def_elas.transpose();
+	result += lambda * (Je - 1) * Je * Eigen::Matrix2d::Identity();
+	//return harden * result;
+	return result;
+}*/
+
 Eigen::Matrix2d Particle::get_energy_deriv(void) {
 	double Je = def_elas.determinant();
 	double harden = exp(HARDEN * (1 - def_plas.determinant()));
-	Eigen::Matrix2d result = 2 * mu * (def_elas - rot_mat) * def_elas.transpose();
+	Eigen::Matrix2d result = 2 * mu * (def_elas - svd_u * svd_v.transpose()) * def_elas.transpose();
 	result += lambda * (Je - 1) * Je * Eigen::Matrix2d::Identity();
 	return harden * result;
-	return result;
+	//return result;
 }

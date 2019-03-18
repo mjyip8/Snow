@@ -23,8 +23,6 @@ init(float gravity_, int cell_nx, int cell_ny, float lx_)
    h=lx/cell_nx;
    overh=cell_nx/lx;
    // allocate all the grid variables
-   grad_weights_x.resize(cell_nx, cell_ny);
-   grad_weights_y.resize(cell_nx, cell_ny);
    f_x.resize(cell_nx, cell_ny);
    f_y.resize(cell_nx, cell_ny);
    v_x.resize(cell_nx, cell_ny);
@@ -75,7 +73,7 @@ float Grid::CFL(void)
    return h/sqrt(maxv2);
 }
 
-float Grid::bspline_weight(float n) {
+double Grid::bspline_weight(double n) {
    float x = abs(n);
    if (x >= 0. && x < 1.) {
       return 0.5 * x * x * x - x * x + (2./3.);
@@ -86,7 +84,7 @@ float Grid::bspline_weight(float n) {
    }
 }
 
-float Grid::bspline_gradweight(float n) {
+double Grid::bspline_gradweight(double n) {
    float x = abs(n);
    if (x >= 0. && x < 1.) {
       return 1.5*x*x - 2*x;

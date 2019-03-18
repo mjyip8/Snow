@@ -30,8 +30,6 @@ add_particle(const Eigen::Vector2d &px, const Eigen::Vector2d &pu)
 void Particles::transfer_mass_to_grid(void) {
    grid.marker.zero();
    grid.mass = Eigen::ArrayXXd::Zero(grid.mass.rows(), grid.mass.cols());
-   grid.grad_weights_x = Eigen::ArrayXXd::Zero(grid.grad_weights_x.rows(), grid.grad_weights_x.cols());
-   grid.grad_weights_y = Eigen::ArrayXXd::Zero(grid.grad_weights_y.rows(), grid.grad_weights_y.cols());
 
    for (int n = 0; n < np; n++) {
       P[n].i = (int) (P[n].x(0) / grid.h);
@@ -49,19 +47,17 @@ void Particles::transfer_mass_to_grid(void) {
       // iterate for all grid cells within distance 2
       for (int i = low_i; i <= high_i; i++) {
          for (int j = low_j; j <= high_j; j++) {
-
-            float wx = grid.bspline_weight((P[n].x(0) - i * grid.h) / grid.h);
-            float wy = grid.bspline_weight((P[n].x(1) - j * grid.h) / grid.h);
-            grid.mass(i, j) += (wx * wy);
+            //update weights
+            double wx = grid.bspline_weight((P[n].x(0) - i * grid.h) / grid.h);
+            double wy = grid.bspline_weight((P[n].x(1) - j * grid.h) / grid.h);
             P[n].weights.push_back(wx * wy);
-
-            Eigen::Vector2d grad_weight = Eigen::Vector2d(wx * grid.bspline_gradweight((P[n].x(0) - i * grid.h) / grid.h),
-                                       wy * grid.bspline_gradweight((P[n].x(1) - j * grid.h) / grid.h));
+            //update gradient weight
+            double dx = grid.bspline_gradweight((P[n].x(0) - i * grid.h) / grid.h);
+            double dy = grid.bspline_gradweight((P[n].x(1) - j * grid.h) / grid.h);
+            Eigen::Vector2d grad_weight = Eigen::Vector2d(dx * wy, wx * dy);
             P[n].grad_weights.push_back(grad_weight);
-            grid.grad_weights_x(i, j) += grad_weight(0);
-            grid.grad_weights_y(i, j) += grad_weight(1);
-            grid.marker(i, j) = FLUIDCELL;
             
+            grid.mass(i, j) += (wx * wy);
          }
       }
    }
@@ -83,6 +79,8 @@ void Particles::transfer_v_to_grid(void) {
          for (int j = low_j; j <= high_j; j++) {
             grid.v_x(i, j) += P[n].weights[index] * P[n].v(0);
             grid.v_y(i, j) += P[n].weights[index] * P[n].v(1);
+
+            grid.marker(i, j) = FLUIDCELL; 
             index++;
          } 
       }
@@ -110,11 +108,11 @@ void Particles::compute_vol_dens(void) {
       int index = 0;
       for (int i = low_i; i <= high_i; i++) {
          for (int j = low_j; j <= high_j; j++) {
-            P[n].d += (grid.mass(i, j) * P[n].weights[index] / (grid.h * grid.h));
+            P[n].d += (grid.mass(i, j) * P[n].weights[index]);
             index++;
          }
       }
-
+      P[n].d / (grid.h * grid.h);
       P[n].V = (P[n].d > 0.)? (1.0 / P[n].d) : 0.;
    }
 }
@@ -199,7 +197,7 @@ void Particles::resolve_collisions(void) {
       Eigen::Vector2d x_star = P[n].x + dt * P[n].v;
 
       if (x_star(0) < 2 * grid.h || x_star(0) > 1 - 2 * grid.h) {
-         //P[n].v(0) = -FRICTION * P[n].v(0);
+         P[n].v(0) = -FRICTION * P[n].v(0);
       }
 
       if (x_star(1) < 2 * grid.h || x_star(1) > 1 - 2 * grid.h) {
