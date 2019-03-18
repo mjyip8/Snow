@@ -24,9 +24,9 @@ void Particle::update_def_grads(void) {
 
 Eigen::Matrix2d Particle::get_energy_deriv(void) {
 	double Je = def_elas.determinant();
-	//double harden = exp(HARDEN * (1 - def_plas.determinant()));
+	double harden = exp(HARDEN * (1 - def_plas.determinant()));
 	Eigen::Matrix2d result = 2 * mu * (def_elas - rot_mat) * def_elas.transpose();
 	result += lambda * (Je - 1) * Je * Eigen::Matrix2d::Identity();
-	//return harden * result;
-	return result;
+	return harden * result;
+	//return result;
 }
