@@ -46,13 +46,18 @@ struct Particle {
 		def_grad = Eigen::Matrix2d::Identity();
 		def_elas = Eigen::Matrix2d::Identity();
 		def_plas = Eigen::Matrix2d::Identity();
-		update_def_grads();
+		rot_mat = Eigen::Matrix2d::Identity();
+		str_mat = Eigen::Matrix2d::Identity();
+
+		svd_v = Eigen::Matrix2d::Identity();
+		svd_s = Eigen::Matrix2d::Identity();
+		svd_u = Eigen::Matrix2d::Identity();
 
 		lambda = (YOUNG_MOD * POSS_R)/((1 + POSS_R) * (1 - 2 * POSS_R));
 		mu = (YOUNG_MOD)/ (2 * (1 + POSS_R));
 	}
 
-	void update_def_grads(void);
+	void update_def_grads(double dt);
 	Eigen::Matrix2d get_energy_deriv(void);
 
 	private:

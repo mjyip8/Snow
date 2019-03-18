@@ -151,49 +151,21 @@ void Particles::compute_grid_forces(void) {
 
 }
 
-//STEP 6
-void Particles::update_vn1(void) {
+//STEP 7
+void Particles::update_def_grad(void) {
+   for (int n = 0; n < np; n++) {
+      P[n].update_def_grads(dt);
+   }
+}
+
+//STEP 6 & 8
+void Particles::transfer_v_to_p(void) {
    grid.v_x_n1 = grid.v_star_x;
    grid.v_y_n1 = grid.v_star_y;
 
 
    for (int n = 0; n < np; n++) {
       P[n].grad_v_n1 = Eigen::Matrix2d::Zero();
-
-      int low_i = max(P[n].i - 2, 0);
-      int low_j = max(P[n].j - 2, 0);
-      int high_i = min(P[n].i + 2, (int) grid.mass.rows() - 1);
-      int high_j = min(P[n].j + 2, (int) grid.mass.cols() - 1);
-
-      int index = 0;
-      for (int i = low_i; i <= high_i; i++) {
-         for (int j = low_j; j <= high_j; j++) {  
-            Eigen::Vector2d vi_n1 = Eigen::Vector2d(grid.v_x_n1(i, j), grid.v_y_n1(i, j));
-            P[n].grad_v_n1 += (vi_n1 * P[n].grad_weights[index].transpose());
-            index++;
-         }
-      } 
-      cout << P[n].grad_v_n1 << endl;
-      cout << "___________" << endl;
-   }
-}
-
-
-//STEP 7
-void Particles::update_defgrad() {
-   for (int n = 0; n < np; n++) {
-      Eigen::Matrix2d def_star_elas = (Eigen::Matrix2d::Identity() + dt * P[n].grad_v_n1) * (P[n].def_elas);
-      Eigen::Matrix2d def_star_plas = P[n].def_plas;
-
-      P[n].def_grad = def_star_elas * def_star_plas;
-      P[n].def_elas = def_star_elas;
-      P[n].update_def_grads();
-   }
-}
-
-//STEP 8
-void Particles::transfer_v_to_p(void) {
-   for (int n = 0; n < np; n++) {
       Eigen::Vector2d v_pic = Eigen::Vector2d::Zero();
       Eigen::Vector2d v_flip = P[n].v;
 
@@ -206,10 +178,13 @@ void Particles::transfer_v_to_p(void) {
       int index = 0;
       for (int i = low_i; i <= high_i; i++) {
          for (int j = low_j; j <= high_j; j++) {
+
             Eigen::Vector2d v_n1 = Eigen::Vector2d(grid.v_x_n1(i, j), grid.v_y_n1(i, j));
             Eigen::Vector2d v = Eigen::Vector2d(grid.v_x(i, j), grid.v_y(i, j));
             v_pic +=  P[n].weights[index] * v_n1;
             v_flip += P[n].weights[index] * (v_n1 - v);
+            //update gradient velocity too
+            P[n].grad_v_n1 += (v_n1 * P[n].grad_weights[index].transpose());
             index++;
          }
       }

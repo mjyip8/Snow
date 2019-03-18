@@ -55,7 +55,7 @@ void init_water_drop(Grid &grid, Particles &particles, int na, int nb)
    int i, j, a, b;
    float x, y, phi;
    float vx, vy;
-   vx = 2;
+   vx = 3;
    vy = 0;
 
    for(i=1; i<grid.marker.nx-1; ++i){
@@ -107,14 +107,11 @@ void advance_one_step(Grid &grid, Particles &particles, double dt, int framenum)
    //STEP 5: Enforce boundary conditions with friction 
    grid.resolve_collisions();
 
-   //STEP 6: Solve for v at next time step
-   particles.update_vn1();
-
-   //STEP 7: Update deformation gradient
-   particles.update_defgrad();
-
    //STEP 8: Update particle velocities
    particles.transfer_v_to_p();
+
+   //STEP 7: Update deformation gradient
+   particles.update_def_grad();
 
    //STEP 9: Handle particle-particle collisions
    particles.resolve_collisions();

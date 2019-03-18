@@ -42,8 +42,7 @@ struct Particles{
    void compute_vol_dens(void);
    void transfer_mass_to_grid(void);
    void transfer_v_to_grid(void);
-   void update_vn1(void);
-   void update_defgrad(void);
+   void update_def_grad(void);
    void transfer_v_to_p(void);
    void resolve_collisions(void);
    void update_x(void);
