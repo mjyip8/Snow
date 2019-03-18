@@ -7,7 +7,7 @@
 #define POSS_R (0.2)
 #define CRIT_STRETCH (1 + 0.0075)
 #define CRIT_COMPRESS (1 - 0.025)
-#define HARDEN (10.0)
+#define HARDEN (5.0)
 
 struct Particle {
 	Eigen::Vector2d x;
@@ -16,6 +16,7 @@ struct Particle {
  
 	double d;
 	double V;
+	Eigen::Matrix2d grad_v_n1;
 
 	Eigen::Matrix2d def_grad;
 	Eigen::Matrix2d def_elas;
@@ -27,7 +28,6 @@ struct Particle {
 	Eigen::Matrix2d svd_s;
 	Eigen::Matrix2d svd_u;
 
-	std::vector<Eigen::Vector2i> weight_nodes;
 	std::vector<Eigen::Vector2d> grad_weights;
 	std::vector<double> weights;
 
@@ -40,9 +40,9 @@ struct Particle {
 
 	Particle(Eigen::Vector2d X, Eigen::Vector2d U): x(X), v(U), 
 	d(0.), V(0.), i(0), j(0) {
-		weight_nodes.clear();
 		grad_weights.clear();
 		//setting as identity matrix
+		grad_v_n1 = Eigen::Matrix2d::Identity();
 		def_grad = Eigen::Matrix2d::Identity();
 		def_elas = Eigen::Matrix2d::Identity();
 		def_plas = Eigen::Matrix2d::Identity();

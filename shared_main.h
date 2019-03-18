@@ -108,7 +108,7 @@ void advance_one_step(Grid &grid, Particles &particles, double dt, int framenum)
    grid.resolve_collisions();
 
    //STEP 6: Solve for v at next time step
-   grid.update_vn1();
+   particles.update_vn1();
 
    //STEP 7: Update deformation gradient
    particles.update_defgrad();

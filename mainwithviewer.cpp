@@ -62,11 +62,11 @@ void display(void)
 
    glBegin(GL_LINES);
     glVertex2f(0.03, 0.03);
-    glVertex2f(0.97, 0.03);
+    glVertex2f(1, 0.03);
    glEnd();
    glBegin(GL_LINES);
-    glVertex2f(0.97, 0.03);
-    glVertex2f(0.97, 0.97);
+    glVertex2f(1, 0.03);
+    glVertex2f(1, 0.97);
    glEnd();
 }
 

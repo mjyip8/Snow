@@ -6,7 +6,6 @@
 
 using namespace std;
 
-//Math OK
 void Particle::update_def_grads(void) {
 	Eigen::JacobiSVD<Eigen::Matrix2d> svd(def_elas, Eigen::ComputeFullV | Eigen::ComputeFullU);
 	svd_v = svd.matrixV();
@@ -24,11 +23,10 @@ void Particle::update_def_grads(void) {
 }
 
 Eigen::Matrix2d Particle::get_energy_deriv(void) {
-	//Eigen::Matrix2d result = 2 * mu * (def_elas - rot_mat);
-	//result += lambda * (def_elas.determinant() - 1) * def_elas.determinant() * def_elas.transpose().inverse();
 	double Je = def_elas.determinant();
-	double harden = exp(HARDEN * (1 - def_plas.determinant()));
+	//double harden = exp(HARDEN * (1 - def_plas.determinant()));
 	Eigen::Matrix2d result = 2 * mu * (def_elas - rot_mat) * def_elas.transpose();
 	result += lambda * (Je - 1) * Je * Eigen::Matrix2d::Identity();
-	return harden * result;
+	//return harden * result;
+	return result;
 }
