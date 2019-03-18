@@ -173,8 +173,6 @@ void Particles::update_vn1(void) {
             index++;
          }
       } 
-      cout << P[n].grad_v_n1 << endl;
-      cout << "___________" << endl;
    }
 }
 
@@ -224,7 +222,7 @@ void Particles::resolve_collisions(void) {
       Eigen::Vector2d x_star = P[n].x + dt * P[n].v;
 
       if (x_star(0) < 2 * grid.h || x_star(0) > 1 - 2 * grid.h) {
-         //P[n].v(0) = -FRICTION * P[n].v(0);
+         P[n].v(0) = -FRICTION * P[n].v(0);
       }
 
       if (x_star(1) < 2 * grid.h || x_star(1) > 1 - 2 * grid.h) {

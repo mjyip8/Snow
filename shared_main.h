@@ -55,7 +55,7 @@ void init_water_drop(Grid &grid, Particles &particles, int na, int nb)
    int i, j, a, b;
    float x, y, phi;
    float vx, vy;
-   vx = 2;
+   vx = 3;
    vy = 0;
 
    for(i=1; i<grid.marker.nx-1; ++i){
