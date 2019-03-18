@@ -55,8 +55,8 @@ void Particles::transfer_mass_to_grid(void) {
             grid.mass(i, j) += (wx * wy);
             P[n].weights.push_back(wx * wy);
 
-            Eigen::Vector2d grad_weight = Eigen::Vector2d(wx * grid.bspline_gradweight((P[n].x(0) - i * grid.h) / grid.h),
-                                       wy * grid.bspline_gradweight((P[n].x(1) - j * grid.h) / grid.h));
+            Eigen::Vector2d grad_weight = Eigen::Vector2d(wy * grid.bspline_gradweight((P[n].x(0) - i * grid.h) / grid.h),
+                                       wx * grid.bspline_gradweight((P[n].x(1) - j * grid.h) / grid.h));
             P[n].grad_weights.push_back(grad_weight);
             grid.grad_weights_x(i, j) += grad_weight(0);
             grid.grad_weights_y(i, j) += grad_weight(1);

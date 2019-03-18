@@ -106,7 +106,7 @@ void Grid::update_v(void) {
 
    for (int i = 0; i < v_star_x.rows(); i++) {
       for (int j = 0; j < v_star_y.cols(); j++) {
-         v_star_x(i, j) = (mass(i, j) == 0)? 0 : v_x(i, j) + dt * (25 + f_x(i, j) / mass(i, j));
+         v_star_x(i, j) = (mass(i, j) == 0)? 0 : v_x(i, j) + dt * (f_x(i, j) / mass(i, j));
          v_star_y(i, j) = (mass(i, j) == 0)? 0 : v_y(i, j) + dt * (-gravity + f_y(i, j) / mass(i, j));
       }
    }
