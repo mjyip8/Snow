@@ -1,5 +1,8 @@
 # CS348C Final Project: Snow
 Used this as my final project for CS348c Animation and Simulation.
+
+![alt text](https://raw.githubusercontent.com/mjyip8/Snow/master/artifacts/snow.gif)
+
 ## Implementation Details
 Implementing the method described in 2013 paper, [A material point method for snow simulation](http://www.math.ucla.edu/~jteran/papers/SSCTS13.pdf). The simulation runs in 2D. 
 - Used explicit time integration scheme to update the velocities. 
