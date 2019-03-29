@@ -21,7 +21,7 @@ int main(int argc, char **argv)
    float gravity = 9.8;
    if( USE_SPHERICAL_GRAV )
       gravity *= GRAV_FACTOR;
-   Grid grid(gravity, 50, 50, 1);
+   Grid grid(gravity, 100, 100, 1);
    SimulationType sType = SIMULATION_TYPE;
    
    std::string outputpath=".";

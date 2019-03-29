@@ -138,8 +138,8 @@ void Particles::compute_grid_forces(void) {
             Eigen::Matrix2d d_energy = P[n].get_energy_deriv();
             Eigen::Vector2d gw = P[n].grad_weights[index];
             Eigen::Vector2d df = P[n].V * d_energy * gw;
-            df(0) = clamp(df(0), 0., 1.);
-            df(1) = clamp(df(1), 0., 1.);
+            df(0) = clamp(df(0), -1. / dt, 1. / dt);
+            df(1) = clamp(df(1), -1. / dt, 1. / dt);
 
             grid.f_x(i, j) -= df(0);
             grid.f_y(i, j) -= df(1);

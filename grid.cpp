@@ -89,9 +89,9 @@ float Grid::bspline_weight(float n) {
 float Grid::bspline_gradweight(float n) {
    float x = abs(n);
    if (x >= 0. && x < 1.) {
-      return 1.5*x*x - 2*x;
+      return 1.5*x*n - 2*n;
    } else if (x >= 1. && x < 2.) {
-      return -.5*x*x + 2*x - 2;
+      return -.5*x*n + 2*n - 2*n/abs(n);
    } else {
       return 0;
    }
